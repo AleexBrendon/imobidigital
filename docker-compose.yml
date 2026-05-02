@@ -1,0 +1,53 @@
+services:
+  app:
+    build:
+      context: ./docker/php
+    container_name: imobidigital_app
+    working_dir: /var/www
+    volumes:
+      - ./backend:/var/www
+    depends_on:
+      - mysql
+
+  nginx:
+    image: nginx:alpine
+    container_name: imobidigital_nginx
+    ports:
+      - "8000:80"
+    volumes:
+      - ./backend:/var/www
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+
+  mysql:
+    image: mysql:8.0
+    container_name: imobidigital_mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: imobidigital
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: imobi
+      MYSQL_PASSWORD: root
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  frontend:
+    image: node:22-alpine
+    container_name: imobidigital_frontend
+    working_dir: /app
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+
+  redis:
+    image: redis:alpine
+    container_name: imobidigital_redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  mysql_data:
