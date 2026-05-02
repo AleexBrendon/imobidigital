@@ -1,9 +1,9 @@
 import { Plus } from "lucide-react";
 import { useMemo, useState } from "react";
-import { UserActivityPanel } from "../components/users/UserActivityPanel";
-import { UserFilters } from "../components/users/UserFilters";
-import { UserFormPanel } from "../components/users/UserFormPanel";
-import { UserTable } from "../components/users/UserTable";
+import { UserActivityPanel } from "../components/usuarios/UserActivityPanel";
+import { UserFilters } from "../components/usuarios/UserFilters";
+import { UserFormPanel } from "../components/usuarios/UserFormPanel";
+import { UserTable } from "../components/usuarios/UserTable";
 import { initialUsers } from "../components/data/users";
 import type { UserItem } from "../types/user";
 
