@@ -1,6 +1,7 @@
 import { MoreHorizontal, Save, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { ClientItem, ClientStatus, ClientType } from "../../types/client";
+import { formatPhone } from "../../utils/format";
 
 type FormData = Omit<ClientItem, "id" | "avatar">;
 
@@ -81,7 +82,9 @@ export function ClientFormPanel({
           label="Telefone"
           value={form.phone}
           placeholder="(11) 99999-9999"
-          onChange={(value) => setForm({ ...form, phone: value })}
+          onChange={(value) =>
+            setForm({ ...form, phone: formatPhone(value) })
+          }
         />
 
         <label>

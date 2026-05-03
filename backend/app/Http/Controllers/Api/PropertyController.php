@@ -6,9 +6,12 @@ use App\Models\Property;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class PropertyController extends Controller
 {
+    use AuthorizesRequests;
+
     public function index(Request $request)
     {
         $query = Property::with(['images', 'negotiations.client', 'visits.client'])
@@ -27,6 +30,8 @@ class PropertyController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize('create', Property::class);
+
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'type' => ['nullable', 'string', 'max:100'],
@@ -71,6 +76,8 @@ class PropertyController extends Controller
 
     public function show(Property $property)
     {
+        $this->authorize('view', $property);
+
         return response()->json(
             $property->load(['images', 'negotiations.client', 'visits.client'])
         );
@@ -78,6 +85,8 @@ class PropertyController extends Controller
 
     public function update(Request $request, Property $property)
     {
+        $this->authorize('update', $property);
+
         $data = $request->validate([
             'title' => ['sometimes', 'string', 'max:255'],
             'type' => ['sometimes', 'string', 'max:100'],
@@ -113,6 +122,8 @@ class PropertyController extends Controller
 
     public function destroy(Property $property)
     {
+        $this->authorize('delete', $property);
+
         foreach ($property->images as $image) {
             Storage::disk('public')->delete($image->path);
         }

@@ -17,19 +17,16 @@ export function ClientRow({
   return (
     <div
       onClick={onSelect}
-      className={`grid cursor-pointer grid-cols-[42px_1.5fr_1.3fr_1.2fr_.8fr_.7fr_.5fr] items-center rounded-lg px-3 py-2.5 text-sm ${
-        active
-          ? "border border-cyan-400 bg-cyan-400/10"
-          : "hover:bg-white/5"
-      }`}
+      className={`grid cursor-pointer grid-cols-[42px_1.5fr_1.3fr_1.2fr_.8fr_.7fr_.5fr] items-center rounded-lg px-3 py-2.5 text-sm ${active
+        ? "border border-cyan-400 bg-cyan-400/10"
+        : "hover:bg-white/5"
+        }`}
     >
       <div className="h-5 w-5 rounded border border-white/15" />
-
       <div className="flex items-center gap-3">
-        <img
-          src={`https://i.pravatar.cc/80?img=${client.avatar}`}
-          className="h-9 w-9 rounded-full"
-        />
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-cyan-500/20 text-sm font-semibold text-cyan-300">
+          {client.name.charAt(0).toUpperCase()}
+        </div>
         {client.name}
       </div>
 
@@ -38,13 +35,12 @@ export function ClientRow({
       <span>{client.type}</span>
 
       <span
-        className={`text-xs ${
-          client.status === "Ativo"
-            ? "text-emerald-400"
-            : client.status === "Lead"
+        className={`text-xs ${client.status === "Ativo"
+          ? "text-emerald-400"
+          : client.status === "Lead"
             ? "text-yellow-400"
             : "text-red-400"
-        }`}
+          }`}
       >
         {client.status}
       </span>
@@ -52,6 +48,7 @@ export function ClientRow({
       <div className="flex gap-2">
         <Edit3
           size={16}
+          className="cursor-pointer hover:text-cyan-400"
           onClick={(e) => {
             e.stopPropagation();
             onEdit();
@@ -59,6 +56,7 @@ export function ClientRow({
         />
         <Trash2
           size={16}
+          className="cursor-pointer hover:text-red-400"
           onClick={(e) => {
             e.stopPropagation();
             onDelete();

@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Api;
 use App\Models\Contract;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class ContractController extends Controller
 {
+    use AuthorizesRequests;
+
     public function index(Request $request)
     {
         $query = Contract::with([
@@ -31,6 +34,8 @@ class ContractController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize('create', Contract::class);
+
         $data = $request->validate([
             'client_id' => ['nullable', 'exists:clients,id'],
             'property_id' => ['nullable', 'exists:properties,id'],
@@ -122,6 +127,8 @@ class ContractController extends Controller
 
     public function show(Contract $contract)
     {
+        $this->authorize('view', $contract);
+
         return response()->json(
             $contract->load([
                 'client',
@@ -135,6 +142,8 @@ class ContractController extends Controller
 
     public function update(Request $request, Contract $contract)
     {
+        $this->authorize('update', $contract);
+
         $data = $request->validate([
             'client_id' => ['nullable', 'exists:clients,id'],
             'property_id' => ['nullable', 'exists:properties,id'],
@@ -164,6 +173,8 @@ class ContractController extends Controller
 
     public function destroy(Contract $contract)
     {
+        $this->authorize('delete', $contract);
+
         $contract->delete();
 
         return response()->json([

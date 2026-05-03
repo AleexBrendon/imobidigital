@@ -6,9 +6,12 @@ use App\Models\Document;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class DocumentController extends Controller
 {
+    use AuthorizesRequests;
+
     public function index(Request $request)
     {
         $query = Document::with('client')->latest();
@@ -30,6 +33,8 @@ class DocumentController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize('create', Document::class);
+
         $data = $request->validate([
             'client_id' => ['nullable', 'exists:clients,id'],
             'status' => ['nullable', 'string'],
@@ -69,11 +74,15 @@ class DocumentController extends Controller
 
     public function show(Document $document)
     {
+        $this->authorize('view', $document);
+
         return response()->json($document->load('client'));
     }
 
     public function update(Request $request, Document $document)
     {
+        $this->authorize('update', $document);
+
         $data = $request->validate([
             'client_id' => ['nullable', 'exists:clients,id'],
             'name' => ['sometimes', 'string'],
@@ -89,6 +98,8 @@ class DocumentController extends Controller
 
     public function destroy(Document $document)
     {
+        $this->authorize('delete', $document);
+
         Storage::disk('public')->delete($document->file_path);
 
         $document->delete();
@@ -100,6 +111,8 @@ class DocumentController extends Controller
 
     public function download(Document $document)
     {
+        $this->authorize('view', $document);
+
         if (! Storage::disk('public')->exists($document->file_path)) {
             return response()->json([
                 'message' => 'Arquivo não encontrado.',

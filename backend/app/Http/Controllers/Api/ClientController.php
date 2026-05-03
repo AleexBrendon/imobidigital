@@ -6,47 +6,60 @@ use App\Models\Client;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\StoreClientRequest;
+use App\Http\Requests\UpdateClientRequest;
+use App\Http\Resources\ClientResource;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class ClientController extends Controller
 {
+
+    use AuthorizesRequests;
+
     public function index()
     {
-        return Client::latest()->get();
+        return ClientResource::collection(
+            Client::latest()->paginate(10)
+        );
     }
 
-    public function store(Request $request)
+    public function store(StoreClientRequest $request)
     {
-        $data = $request->validate([
-            'name' => ['required'],
-            'email' => ['nullable', 'email'],
-            'phone' => ['nullable'],
-            'type' => ['required'],
-            'status' => ['required'],
-        ]);
 
-        $data['company_id'] = Auth::user()->company_id;
+        $data = $request->validated();
+        $data['company_id'] = $request->user()->company_id;
 
-        return Client::create($data);
+        $client = Client::create($data);
+
+        return (new ClientResource($client))
+            ->response()
+            ->setStatusCode(201);
     }
 
     public function show(Client $client)
     {
-        return $client;
+        $this->authorize('view', $client);
+
+        return new ClientResource($client);
     }
 
-    public function update(Request $request, Client $client)
+    public function update(UpdateClientRequest $request, Client $client)
     {
-        $client->update($request->all());
+        $this->authorize('update', $client);
 
-        return $client;
+        $client->update($request->validated());
+
+        return new ClientResource($client);
     }
 
     public function destroy(Client $client)
     {
+        $this->authorize('delete', $client);
+
         $client->delete();
 
         return response()->json([
-            'message' => 'Cliente removido',
+            'message' => 'Cliente removido com sucesso.',
         ]);
     }
 }

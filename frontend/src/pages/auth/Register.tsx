@@ -1,14 +1,70 @@
 import { BadgeCheck, IdCard, Lock, Mail, Phone, User } from "lucide-react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { register } from "../../services/auth";
+
+function onlyNumbers(value: string) {
+  return value.replace(/\D/g, "");
+}
+
+function formatPhone(value: string) {
+  const numbers = onlyNumbers(value).slice(0, 11);
+
+  return numbers
+    .replace(/^(\d{2})(\d)/, "($1)$2")
+    .replace(/(\d{1})(\d{4})(\d{0,4})$/, "$1 $2-$3")
+    .replace(/-$/, "");
+}
+
+function formatCpf(value: string) {
+  const numbers = onlyNumbers(value).slice(0, 11);
+
+  return numbers
+    .replace(/^(\d{3})(\d)/, "$1.$2")
+    .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
+    .replace(/\.(\d{3})(\d)/, ".$1-$2");
+}
+
+function formatCnpj(value: string) {
+  const numbers = onlyNumbers(value).slice(0, 14);
+
+  return numbers
+    .replace(/^(\d{2})(\d)/, "$1.$2")
+    .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+    .replace(/\.(\d{3})(\d)/, ".$1/$2")
+    .replace(/(\d{4})(\d)/, "$1-$2");
+}
 
 export function Register() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
-  function handleRegister(event: React.FormEvent) {
+  const [form, setForm] = useState({
+    company_name: "",
+    company_document: "",
+    name: "",
+    email: "",
+    phone: "",
+    document: "",
+    password: "",
+    password_confirmation: "",
+  });
+
+  async function handleRegister(event: React.FormEvent) {
     event.preventDefault();
 
-    localStorage.setItem("token", "fake-token");
-    navigate("/dashboard");
+    try {
+      setLoading(true);
+
+      await register(form);
+
+      navigate("/dashboard");
+    } catch (error: any) {
+      console.log("REGISTER ERROR:", error.response?.data);
+      alert(error.response?.data?.message ?? "Erro ao criar conta.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -33,29 +89,30 @@ export function Register() {
 
       <form onSubmit={handleRegister} className="mt-8 space-y-5">
         <div className="grid grid-cols-2 gap-4">
-          <Field icon={<User size={20} />} placeholder="Nome" />
-          <Field icon={<Mail size={20} />} placeholder="E-mail" type="email" />
-          <Field icon={<Phone size={20} />} placeholder="Telefone" />
-          <Field icon={<IdCard size={20} />} placeholder="CPF/CNPJ" />
-          <Field icon={<Lock size={20} />} placeholder="Senha" type="password" />
-          <Field icon={<Lock size={20} />} placeholder="Confirma Senha" type="password" />
+          <Field icon={<User size={20} />} placeholder="Empresa" value={form.company_name} onChange={(value) => setForm({ ...form, company_name: value })} />
+
+          <Field icon={<IdCard size={20} />} placeholder="CNPJ" value={form.company_document} onChange={(value) => setForm({ ...form, company_document: formatCnpj(value) })} />
+
+          <Field icon={<User size={20} />} placeholder="Nome" value={form.name} onChange={(value) => setForm({ ...form, name: value })} />
+
+          <Field icon={<Mail size={20} />} placeholder="E-mail" type="email" value={form.email} onChange={(value) => setForm({ ...form, email: value })} />
+
+          <Field icon={<Phone size={20} />} placeholder="Telefone" value={form.phone} onChange={(value) => setForm({ ...form, phone: formatPhone(value) })} />
+
+          <Field icon={<IdCard size={20} />} placeholder="CPF" value={form.document} onChange={(value) => setForm({ ...form, document: formatCpf(value) })} />
+
+          <Field icon={<Lock size={20} />} placeholder="Senha" type="password" value={form.password} onChange={(value) => setForm({ ...form, password: value })} />
+
+          <Field icon={<Lock size={20} />} placeholder="Confirmar senha" type="password" value={form.password_confirmation} onChange={(value) => setForm({ ...form, password_confirmation: value })} />
         </div>
 
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <label className="flex items-center gap-2 text-slate-300">
-            <input type="checkbox" className="h-4 w-4 rounded accent-indigo-600" />
-            Eu aceito os <button type="button" className="underline">termos de uso</button>
-          </label>
-
-          <label className="flex items-center gap-2 text-slate-300">
-            <input type="checkbox" className="h-4 w-4 rounded accent-indigo-600" />
-            Quero receber novidades
-          </label>
-        </div>
-
-        <button className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 font-semibold text-white shadow-[0_0_26px_rgba(99,102,241,.45)] transition hover:brightness-110">
+        <button
+          type="submit"
+          disabled={loading}
+          className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 font-semibold text-white shadow-[0_0_26px_rgba(99,102,241,.45)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+        >
           <BadgeCheck size={20} />
-          Criar Minha Conta
+          {loading ? "Criando conta..." : "Criar Minha Conta"}
         </button>
       </form>
 
@@ -73,16 +130,22 @@ function Field({
   icon,
   placeholder,
   type = "text",
+  value,
+  onChange,
 }: {
   icon: React.ReactNode;
   placeholder: string;
   type?: string;
+  value: string;
+  onChange: (value: string) => void;
 }) {
   return (
     <div className="flex h-12 items-center gap-3 rounded-xl border border-white/10 bg-white/[0.06] px-4 text-slate-400 focus-within:border-cyan-400">
       {icon}
       <input
         type={type}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         className="h-full flex-1 bg-transparent text-slate-100 outline-none placeholder:text-slate-500"
       />

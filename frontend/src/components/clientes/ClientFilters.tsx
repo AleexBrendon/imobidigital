@@ -1,4 +1,4 @@
-type Filter = "all" | "comprador" | "locador" | "locatario";
+type Filter = "all" | "comprador" | "locador" | "locatario" | "investidor";
 
 export function ClientFilters({
   activeFilter,
@@ -12,6 +12,7 @@ export function ClientFilters({
     { label: "Compradores", value: "comprador" },
     { label: "Locadores", value: "locador" },
     { label: "Locatários", value: "locatario" },
+    { label: "Investidores", value: "investidor" },
   ] as const;
 
   return (
