@@ -1,4 +1,4 @@
-import { Save, X } from "lucide-react";
+import { ImagePlus, Save, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import type {
   PropertyItem,
@@ -7,7 +7,9 @@ import type {
 } from "../../types/property";
 import { formatCurrencyBR } from "../../utils/format";
 
-type PropertyFormData = Omit<PropertyItem, "id">;
+type PropertyFormData = Omit<PropertyItem, "id" | "images"> & {
+  images: File[];
+};
 
 const emptyForm: PropertyFormData = {
   title: "",
@@ -34,6 +36,7 @@ export function PropertyFormModal({
   onClose: () => void;
 }) {
   const [form, setForm] = useState<PropertyFormData>(emptyForm);
+  const [previewImages, setPreviewImages] = useState<string[]>([]);
 
   useEffect(() => {
     if (editingProperty) {
@@ -48,13 +51,25 @@ export function PropertyFormModal({
         parkingSpaces: editingProperty.parkingSpaces,
         type: editingProperty.type,
         status: editingProperty.status,
-        images: editingProperty.images,
+        images: [],
         ownerName: editingProperty.ownerName ?? "",
       });
+
+      setPreviewImages(editingProperty.images ?? []);
     } else {
       setForm(emptyForm);
+      setPreviewImages([]);
     }
   }, [editingProperty]);
+
+  function handleImagesChange(files: FileList | null) {
+    const selectedFiles = Array.from(files ?? []);
+
+    setForm({ ...form, images: selectedFiles });
+
+    const previews = selectedFiles.map((file) => URL.createObjectURL(file));
+    setPreviewImages(previews);
+  }
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -155,53 +170,73 @@ export function PropertyFormModal({
             }
           />
 
-          <label>
-            <span className="mb-2 block text-sm font-medium text-slate-300">
-              Tipo
-            </span>
+          <SelectField
+            label="Tipo"
+            value={form.type}
+            onChange={(value) =>
+              setForm({ ...form, type: value as PropertyType })
+            }
+            options={["Apartamento", "Casa", "Terreno", "Comercial", "Rural"]}
+          />
 
-            <select
-              value={form.type}
-              onChange={(event) =>
-                setForm({ ...form, type: event.target.value as PropertyType })
-              }
-              className="h-10 w-full rounded-lg border border-white/10 bg-slate-700/40 px-3 text-sm text-slate-200 outline-none focus:border-cyan-400"
-            >
-              <option>Apartamento</option>
-              <option>Casa</option>
-              <option>Terreno</option>
-              <option>Comercial</option>
-              <option>Rural</option>
-            </select>
-          </label>
-
-          <label>
-            <span className="mb-2 block text-sm font-medium text-slate-300">
-              Status
-            </span>
-
-            <select
-              value={form.status}
-              onChange={(event) =>
-                setForm({
-                  ...form,
-                  status: event.target.value as PropertyStatus,
-                })
-              }
-              className="h-10 w-full rounded-lg border border-white/10 bg-slate-700/40 px-3 text-sm text-slate-200 outline-none focus:border-cyan-400"
-            >
-              <option>Disponível</option>
-              <option>Reservado</option>
-              <option>Alugado</option>
-              <option>Vendido</option>
-              <option>Inativo</option>
-            </select>
-          </label>
+          <SelectField
+            label="Status"
+            value={form.status}
+            onChange={(value) =>
+              setForm({ ...form, status: value as PropertyStatus })
+            }
+            options={[
+              "Disponível",
+              "Reservado",
+              "Alugado",
+              "Vendido",
+              "Inativo",
+            ]}
+          />
         </div>
 
-        <div className="mt-4 rounded-lg border border-white/10 bg-white/5 p-3 text-sm text-slate-400">
-          Upload de imagens será integrado depois via <strong>multipart/form-data</strong>.
-        </div>
+        <label className="mt-4 block">
+          <span className="mb-2 block text-sm font-medium text-slate-300">
+            Imagens do imóvel
+          </span>
+
+          <div className="flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-white/15 bg-slate-700/30 px-4 py-6 text-center transition hover:border-cyan-400 hover:bg-cyan-400/5">
+            <ImagePlus size={28} className="mb-2 text-cyan-300" />
+
+            <p className="text-sm font-medium text-slate-200">
+              Clique para importar imagens
+            </p>
+
+            <p className="mt-1 text-xs text-slate-400">
+              Você pode selecionar várias imagens
+            </p>
+
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={(event) => handleImagesChange(event.target.files)}
+              className="absolute opacity-0"
+            />
+          </div>
+        </label>
+
+        {previewImages.length > 0 && (
+          <div className="mt-4 grid grid-cols-5 gap-3">
+            {previewImages.map((image, index) => (
+              <div
+                key={`${image}-${index}`}
+                className="overflow-hidden rounded-lg border border-white/10"
+              >
+                <img
+                  src={image}
+                  className="h-20 w-full object-cover"
+                  alt={`Imagem ${index + 1}`}
+                />
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="mt-5 flex gap-3">
           <button
@@ -252,6 +287,36 @@ function Field({
         onChange={(event) => onChange(event.target.value)}
         className="h-10 w-full rounded-lg border border-white/10 bg-slate-700/40 px-3 text-sm text-slate-200 outline-none placeholder:text-slate-500 focus:border-cyan-400"
       />
+    </label>
+  );
+}
+
+function SelectField({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: string[];
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label>
+      <span className="mb-2 block text-sm font-medium text-slate-300">
+        {label}
+      </span>
+
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="h-10 w-full rounded-lg border border-white/10 bg-slate-700/40 px-3 text-sm text-slate-200 outline-none focus:border-cyan-400"
+      >
+        {options.map((option) => (
+          <option key={option}>{option}</option>
+        ))}
+      </select>
     </label>
   );
 }
