@@ -11,3 +11,28 @@ export function formatPhone(value: string) {
     .replace(/^(\d{2})(\d)/g, "($1) $2")
     .replace(/(\d{5})(\d)/, "$1-$2");
 }
+
+export function formatCurrencyBR(value: string) {
+  const numbers = value.replace(/\D/g, "");
+
+  const amount = Number(numbers) / 100;
+
+  return amount.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
+}
+
+export function currencyBRToNumber(value: string) {
+  return Number(
+    value
+      .replace(/\s/g, "")
+      .replace("R$", "")
+      .replace(/\./g, "")
+      .replace(",", ".")
+  );
+}
+
+export function onlyNumbers(value: string) {
+  return value.replace(/\D/g, "");
+}

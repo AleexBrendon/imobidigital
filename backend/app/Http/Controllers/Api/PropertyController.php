@@ -25,7 +25,9 @@ class PropertyController extends Controller
             $query->where('status', $request->status);
         }
 
-        return response()->json($query->get());
+        return response()->json(
+            $query->get()->map(fn ($property) => $this->formatProperty($property))
+        );
     }
 
     public function store(Request $request)
@@ -69,7 +71,9 @@ class PropertyController extends Controller
         }
 
         return response()->json(
-            $property->load(['images', 'negotiations.client', 'visits.client']),
+            $this->formatProperty(
+                $property->load(['images', 'negotiations.client', 'visits.client'])
+            ),
             201
         );
     }
@@ -79,7 +83,9 @@ class PropertyController extends Controller
         $this->authorize('view', $property);
 
         return response()->json(
-            $property->load(['images', 'negotiations.client', 'visits.client'])
+            $this->formatProperty(
+                $property->load(['images', 'negotiations.client', 'visits.client'])
+            )
         );
     }
 
@@ -116,7 +122,9 @@ class PropertyController extends Controller
         }
 
         return response()->json(
-            $property->load(['images', 'negotiations.client', 'visits.client'])
+            $this->formatProperty(
+                $property->load(['images', 'negotiations.client', 'visits.client'])
+            )
         );
     }
 
@@ -133,5 +141,27 @@ class PropertyController extends Controller
         return response()->json([
             'message' => 'Imóvel removido com sucesso.',
         ]);
+    }
+
+    private function formatProperty(Property $property): array
+    {
+        return [
+            'id' => $property->id,
+            'title' => $property->title,
+            'type' => $property->type,
+            'status' => $property->status,
+            'area' => $property->area ? $property->area . ' m²' : '0 m²',
+            'bedrooms' => (int) $property->bedrooms,
+            'parking_spaces' => (int) $property->parking_spaces,
+            'price' => 'R$ ' . number_format((float) $property->price, 2, ',', '.'),
+            'address' => $property->address,
+            'city' => $property->city,
+            'state' => $property->state,
+
+            'images' => $property->images
+                ->sortByDesc('is_cover')
+                ->map(fn ($image) => asset('storage/' . $image->path))
+                ->values(),
+        ];
     }
 }

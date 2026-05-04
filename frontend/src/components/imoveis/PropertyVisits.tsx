@@ -15,7 +15,10 @@ export function PropertyVisits({ visits }: { visits: VisitItem[] }) {
         <h3 className="text-2xl font-semibold">Visitas</h3>
 
         <button onClick={() => setOnlyDocuments((current) => !current)}>
-          <MoreHorizontal size={22} className="text-slate-400 hover:text-white" />
+          <MoreHorizontal
+            size={22}
+            className="text-slate-400 hover:text-white"
+          />
         </button>
       </div>
 
@@ -32,36 +35,44 @@ export function PropertyVisits({ visits }: { visits: VisitItem[] }) {
         </button>
       </div>
 
-      <div className="max-h-[275px] space-y-2 overflow-auto no-scrollbar">
-        {filtered.map((visit, index) => {
-          const Icon = visit.title.includes("Contrato") ? ScrollText : FileText;
+      {filtered.length === 0 ? (
+        <p className="text-sm text-slate-400">
+          Nenhuma visita encontrada.
+        </p>
+      ) : (
+        <div className="max-h-[275px] space-y-2 overflow-auto no-scrollbar">
+          {filtered.map((visit, index) => {
+            const Icon = visit.title.includes("Contrato")
+              ? ScrollText
+              : FileText;
 
-          return (
-            <div key={visit.id} className="flex gap-4">
-              <div className="flex flex-col items-center">
-                <div
-                  className={`flex h-11 w-11 items-center justify-center rounded-full ${
-                    visit.color === "emerald"
-                      ? "bg-emerald-500/30 text-emerald-300"
-                      : "bg-violet-500/30 text-violet-300"
-                  }`}
-                >
-                  <Icon size={19} />
+            return (
+              <div key={visit.id} className="flex gap-4">
+                <div className="flex flex-col items-center">
+                  <div
+                    className={`flex h-11 w-11 items-center justify-center rounded-full ${
+                      visit.color === "emerald"
+                        ? "bg-emerald-500/30 text-emerald-300"
+                        : "bg-violet-500/30 text-violet-300"
+                    }`}
+                  >
+                    <Icon size={19} />
+                  </div>
+
+                  {index !== filtered.length - 1 && (
+                    <div className="mt-2 h-8 w-px bg-white/10" />
+                  )}
                 </div>
 
-                {index !== filtered.length - 1 && (
-                  <div className="mt-2 h-8 w-px bg-white/10" />
-                )}
+                <div>
+                  <p className="font-medium text-slate-100">{visit.title}</p>
+                  <p className="text-sm text-slate-400">{visit.time}</p>
+                </div>
               </div>
-
-              <div>
-                <p className="font-medium text-slate-100">{visit.title}</p>
-                <p className="text-sm text-slate-400">{visit.time}</p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
