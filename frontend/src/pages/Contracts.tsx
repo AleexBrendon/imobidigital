@@ -1,158 +1,119 @@
-import { useMemo, useState } from "react";
-import { ContractClauseList } from "../components/contratos/ContractClauseList";
-import { ContractDetailsCard } from "../components/contratos/ContractDetailsCard";
-import { ContractDocumentsPanel } from "../components/contratos/ContractDocumentsPanel";
-import { SignatureTimelinePanel } from "../components/contratos/SignatureTimelinePanel";
-import {
-  contractDetailsByClauseId,
-  contractDocumentsByClauseId,
-  initialClauses,
-  signatureEventsByClauseId,
-  signatureStepsByClauseId,
-} from "../components/data/contracts";
-import type { ContractClause, SignatureStep } from "../types/contract";
+import { ContractFormModal } from "../components/contratos/ContractFormModal";
+import { ContractListModal } from "../components/contratos/ContractListModal";
+import { ConfirmDeleteModal } from "../components/ui/ConfirmDeleteModal";
+import { ContractMainPanel } from "../features/contratos/components/ContractMainPanel";
+import { useContractsPage } from "../features/contratos/hooks/useContractsPage";
 
 export function Contracts() {
-  const [clauses, setClauses] = useState<ContractClause[]>(initialClauses);
-  const [selectedClauseId, setSelectedClauseId] = useState<number | null>(null);
-  const [steps, setSteps] = useState<SignatureStep[]>([]);
-  const [filter, setFilter] = useState<"all" | "pending">("all");
+  const page = useContractsPage();
 
-  const selectedClause = useMemo(() => {
-    if (!selectedClauseId) return null;
-    return clauses.find((clause) => clause.id === selectedClauseId) ?? null;
-  }, [clauses, selectedClauseId]);
-
-  const selectedDetails = selectedClauseId
-    ? contractDetailsByClauseId[selectedClauseId]
-    : null;
-
-  const selectedEvents = selectedClauseId
-    ? signatureEventsByClauseId[selectedClauseId] ?? []
-    : [];
-
-  const selectedDocuments = selectedClauseId
-    ? contractDocumentsByClauseId[selectedClauseId] ?? []
-    : [];
-
-  function handleSelectClause(clause: ContractClause) {
-    setSelectedClauseId(clause.id);
-    setSteps(signatureStepsByClauseId[clause.id] ?? []);
-  }
-
-  function toggleClauseStatus(id: number) {
-    setClauses((current) =>
-      current.map((clause) =>
-        clause.id === id
-          ? {
-              ...clause,
-              status: clause.status === "approved" ? "pending" : "approved",
-            }
-          : clause
-      )
+  if (page.loading) {
+    return (
+      <div className="rounded-2xl border border-white/10 bg-[#101c2d]/95 p-6 text-center text-slate-400">
+        Carregando contratos...
+      </div>
     );
   }
 
-  function toggleClauseExpanded(id: number) {
-    setClauses((current) =>
-      current.map((clause) =>
-        clause.id === id ? { ...clause, expanded: !clause.expanded } : clause
-      )
-    );
-  }
+  if (page.contracts.length === 0) {
+    return (
+      <>
+        <div className="rounded-2xl border border-white/10 bg-[#101c2d]/95 p-6 text-center text-slate-400">
+          Nenhum contrato cadastrado.
 
-  function toggleStep(id: number) {
-    setSteps((current) =>
-      current.map((step) =>
-        step.id === id ? { ...step, completed: !step.completed } : step
-      )
-    );
-  }
+          <button
+            onClick={() => {
+              page.setEditingContract(null);
+              page.setShowFormModal(true);
+            }}
+            className="mx-auto mt-4 flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-500"
+          >
+            Adicionar Contrato
+          </button>
+        </div>
 
-  function openDetails() {
-    alert(
-      selectedClause
-        ? `Detalhes da cláusula: ${selectedClause.title}`
-        : "Selecione uma cláusula."
+        {page.showFormModal && (
+          <ContractFormModal
+            editingContract={page.editingContract}
+            clients={page.clients}
+            properties={page.properties}
+            onSave={page.saveContract}
+            onClose={() => {
+              page.setEditingContract(null);
+              page.setShowFormModal(false);
+            }}
+          />
+        )}
+      </>
     );
   }
 
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_420px] gap-5">
-      <section className="rounded-2xl border border-white/10 bg-[#101c2d]/95 p-5 shadow-[0_18px_45px_rgba(0,0,0,.25)]">
-        <div className="mb-4">
-          <h2 className="text-2xl font-semibold">
-            {selectedClause ? selectedClause.title : "Contratos"}
-          </h2>
+    <>
+      <ContractMainPanel
+        contracts={page.contracts}
+        selectedContractId={page.selectedContractId}
+        selectedClauseId={page.selectedClauseId}
+        selectedType={page.selectedType}
+        selectedClause={page.selectedClause}
+        selectedDetails={page.selectedDetails}
+        filter={page.filter}
+        steps={page.steps}
+        events={page.events}
+        documents={page.documents}
+        onClearDetails={page.clearDetails}
+        onSetFilter={page.setFilter}
+        onOpenList={() => page.setShowListModal(true)}
+        onSelectContract={page.selectContractView}
+        onSelectClause={page.selectClause}
+        onToggleClauseStatus={page.toggleClauseStatus}
+        onToggleClauseExpanded={page.toggleClauseExpanded}
+        onToggleStep={page.toggleStep}
+      />
 
-          <div className="mt-4 flex gap-2">
-            <button
-              onClick={() => setFilter("all")}
-              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
-                filter === "all"
-                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/30"
-                  : "border border-white/10 text-slate-400 hover:bg-white/5"
-              }`}
-            >
-              Todos
-            </button>
+      {page.showListModal && (
+        <ContractListModal
+          contracts={page.contracts}
+          selectedContractId={page.selectedContractId}
+          onClose={() => page.setShowListModal(false)}
+          onAdd={() => {
+            page.setEditingContract(null);
+            page.setShowFormModal(true);
+          }}
+          onSelect={(contract) => {
+            page.selectContractView(contract);
+            page.setShowListModal(false);
+          }}
+          onEdit={(contract) => {
+            page.setEditingContract(contract);
+            page.setShowFormModal(true);
+          }}
+          onDelete={(contract) => page.setContractToDelete(contract)}
+        />
+      )}
 
-            <button
-              onClick={() => setFilter("pending")}
-              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
-                filter === "pending"
-                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/30"
-                  : "border border-white/10 text-slate-400 hover:bg-white/5"
-              }`}
-            >
-              Pendentes
-            </button>
-          </div>
-        </div>
+      {page.showFormModal && (
+        <ContractFormModal
+          editingContract={page.editingContract}
+          clients={page.clients}
+          properties={page.properties}
+          onSave={page.saveContract}
+          onClose={() => {
+            page.setEditingContract(null);
+            page.setShowFormModal(false);
+          }}
+        />
+      )}
 
-        <div
-          className={`grid gap-5 ${
-            selectedClause && selectedDetails
-              ? "grid-cols-[minmax(0,1fr)_290px]"
-              : "grid-cols-1"
-          }`}
-        >
-          <ContractClauseList
-            clauses={clauses}
-            selectedId={selectedClauseId}
-            filter={filter}
-            onSelect={handleSelectClause}
-            onToggleStatus={toggleClauseStatus}
-            onToggleExpanded={toggleClauseExpanded}
-          />
-
-          {selectedClause && selectedDetails && (
-            <ContractDetailsCard
-              details={selectedDetails}
-              selectedClause={selectedClause}
-              onOpenDetails={openDetails}
-            />
-          )}
-        </div>
-      </section>
-
-      <aside className="space-y-5">
-        {selectedClause ? (
-          <>
-            <SignatureTimelinePanel
-              steps={steps}
-              events={selectedEvents}
-              onToggleStep={toggleStep}
-            />
-
-            <ContractDocumentsPanel documents={selectedDocuments} />
-          </>
-        ) : (
-          <div className="rounded-2xl border border-white/10 bg-[#101c2d]/95 p-6 text-center text-slate-400">
-            Selecione um contrato para visualizar assinatura e documentos.
-          </div>
-        )}
-      </aside>
-    </div>
+      <ConfirmDeleteModal
+        open={!!page.contractToDelete}
+        itemName={page.contractToDelete?.title}
+        title="Excluir contrato"
+        description="Tem certeza que deseja excluir este contrato? Essa ação não poderá ser desfeita."
+        loading={page.deleting}
+        onClose={() => page.setContractToDelete(null)}
+        onConfirm={page.confirmDelete}
+      />
+    </>
   );
 }

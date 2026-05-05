@@ -42,6 +42,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/property-visits/{visit}', [PropertyVisitController::class, 'destroy']);
     //CONTRACTS ROUTES
     Route::apiResource('contracts', ContractController::class);
+    Route::patch('/signature-steps/{signatureStep}', [ContractController::class, 'updateSignatureStep']);
+    Route::patch('/contract-clauses/{clause}', [ContractController::class, 'updateClauseStatus']);
     //ACTIVITIES ROUTES
     Route::apiResource('activities', ActivityController::class)->only([
         'index',

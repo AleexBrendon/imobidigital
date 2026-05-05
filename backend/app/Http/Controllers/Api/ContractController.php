@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Contract;
+use App\Models\SignatureStep;
+use App\Models\SignatureEvent;
+use App\Models\ContractClause;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -180,5 +183,59 @@ class ContractController extends Controller
         return response()->json([
             'message' => 'Contrato removido com sucesso.',
         ]);
+    }
+
+    public function updateSignatureStep(Request $request, SignatureStep $signatureStep)
+    {
+        $data = $request->validate([
+            'completed' => ['required', 'boolean'],
+        ]);
+
+        if ($signatureStep->company_id !== $request->user()->company_id) {
+            abort(403);
+        }
+
+        $signatureStep->update([
+            'completed' => $data['completed'],
+        ]);
+
+        $eventTitle = $data['completed']
+            ? 'Assinatura ' . $signatureStep->label
+            : 'Assinatura removida: ' . $signatureStep->label;
+
+        $eventDescription = $data['completed']
+            ? 'Etapa assinada em ' . now()->format('d/m/Y H:i')
+            : 'Etapa marcada como pendente em ' . now()->format('d/m/Y H:i');
+
+        $event = SignatureEvent::create([
+            'company_id' => $signatureStep->company_id,
+            'contract_id' => $signatureStep->contract_id,
+            'time' => now()->format('H:i'),
+            'title' => $eventTitle,
+            'description' => $eventDescription,
+            'completed' => $data['completed'],
+        ]);
+
+        return response()->json([
+            'step' => $signatureStep,
+            'event' => $event,
+        ]);
+    }
+
+    public function updateClauseStatus(Request $request, ContractClause $clause)
+    {
+        $data = $request->validate([
+            'status' => ['required', 'in:approved,pending'],
+        ]);
+
+        if ($clause->company_id !== $request->user()->company_id) {
+            abort(403);
+        }
+
+        $clause->update([
+            'status' => $data['status'],
+        ]);
+
+        return response()->json($clause);
     }
 }
