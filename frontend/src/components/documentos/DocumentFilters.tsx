@@ -6,11 +6,13 @@ export type DocumentTypeFilter = "Todos" | DocumentType;
 export function DocumentFilters({
   type,
   client,
+  clients,
   onTypeChange,
   onClientChange,
 }: {
   type: DocumentTypeFilter;
   client: string;
+  clients: string[];
   onTypeChange: (type: DocumentTypeFilter) => void;
   onClientChange: (client: string) => void;
 }) {
@@ -27,6 +29,7 @@ export function DocumentFilters({
         <option>PDF</option>
         <option>DOCX</option>
         <option>Imagem</option>
+        <option>Arquivo</option>
       </select>
 
       <button className="flex h-10 items-center gap-2 rounded-lg border border-white/10 bg-[#142438] px-3 text-slate-200 hover:bg-white/5">
@@ -41,11 +44,10 @@ export function DocumentFilters({
         className="h-10 rounded-lg border border-white/10 bg-[#142438] px-3 text-slate-200 outline-none"
       >
         <option>Todos</option>
-        <option>Contrato Silva</option>
-        <option>Carlos Lima</option>
-        <option>Maria Lima</option>
-        <option>João Silva</option>
-        <option>Maria Souza</option>
+
+        {clients.map((client) => (
+          <option key={client}>{client}</option>
+        ))}
       </select>
     </div>
   );

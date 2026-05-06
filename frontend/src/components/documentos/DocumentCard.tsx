@@ -28,7 +28,13 @@ export function DocumentCard({
   );
 }
 
-export function DocumentIcon({ type, large = false }: { type: DocumentItem["type"]; large?: boolean }) {
+export function DocumentIcon({
+  type,
+  large = false,
+}: {
+  type: DocumentItem["type"];
+  large?: boolean;
+}) {
   const isPdf = type === "PDF";
   const isImage = type === "Imagem";
 
@@ -43,12 +49,24 @@ export function DocumentIcon({ type, large = false }: { type: DocumentItem["type
       {isImage ? (
         <div className="flex flex-col items-center">
           <FileImage className="mb-1 text-slate-500" size={large ? 52 : 30} />
-          <span className="rounded bg-emerald-500 px-2 py-1 text-xs font-bold">Imagens</span>
+          <span className="rounded bg-emerald-500 px-2 py-1 text-xs font-bold">
+            IMG
+          </span>
         </div>
       ) : (
         <>
-          <FileText className={`absolute top-7 ${isPdf ? "text-red-500" : "text-slate-400"}`} size={large ? 62 : 34} />
-          <span className={`rounded px-2 py-1 text-sm font-bold ${isPdf ? "bg-red-500" : "bg-blue-500"}`}>
+          <FileText
+            className={`absolute top-7 ${
+              isPdf ? "text-red-500" : "text-slate-400"
+            }`}
+            size={large ? 62 : 34}
+          />
+
+          <span
+            className={`rounded px-2 py-1 text-sm font-bold ${
+              isPdf ? "bg-red-500" : "bg-blue-500"
+            }`}
+          >
             {type}
           </span>
         </>
@@ -58,17 +76,23 @@ export function DocumentIcon({ type, large = false }: { type: DocumentItem["type
 }
 
 export function StatusBadge({ status }: { status: DocumentItem["status"] }) {
+  const labels: Record<DocumentItem["status"], string> = {
+    pending: "Pendente",
+    validated: "Validado",
+    expiring: "Expirando",
+    expired: "Vencido",
+  };
+
   const styles: Record<DocumentItem["status"], string> = {
-    "Validado por IA": "bg-emerald-500/20 text-emerald-300",
-    Pendente: "bg-yellow-500/20 text-yellow-300",
-    Expirando: "bg-red-500/20 text-red-300",
-    "Expira em 10 dias": "bg-red-500/20 text-red-300",
-    "Expira em 1 dia": "bg-red-500/20 text-red-300",
+    pending: "bg-yellow-500/20 text-yellow-300",
+    validated: "bg-emerald-500/20 text-emerald-300",
+    expiring: "bg-orange-500/20 text-orange-300",
+    expired: "bg-red-500/20 text-red-300",
   };
 
   return (
-    <span className={`rounded-full px-1 py-1 text-xs ${styles[status]}`}>
-      {status}
+    <span className={`rounded-full px-2 py-1 text-xs ${styles[status]}`}>
+      {labels[status]}
     </span>
   );
 }

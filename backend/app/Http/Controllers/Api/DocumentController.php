@@ -28,7 +28,11 @@ class DocumentController extends Controller
             $query->where('status', $request->status);
         }
 
-        return response()->json($query->get());
+        $documents = $query->get();
+
+        $documents->each->refreshStatus();
+
+        return response()->json($documents->load('client'));
     }
 
     public function store(Request $request)
@@ -37,7 +41,6 @@ class DocumentController extends Controller
 
         $data = $request->validate([
             'client_id' => ['nullable', 'exists:clients,id'],
-            'status' => ['nullable', 'string'],
             'validation_date' => ['nullable', 'date'],
             'expiration_date' => ['nullable', 'date'],
             'file' => ['required', 'file', 'max:10240'],
@@ -61,7 +64,7 @@ class DocumentController extends Controller
             'client_id' => $data['client_id'] ?? null,
             'name' => $file->getClientOriginalName(),
             'type' => $type,
-            'status' => $data['status'] ?? 'Pendente',
+            'status' => 'pending',
             'file_path' => $path,
             'mime_type' => $file->getMimeType(),
             'size' => $file->getSize(),
@@ -69,12 +72,16 @@ class DocumentController extends Controller
             'expiration_date' => $data['expiration_date'] ?? now()->addDays(30)->toDateString(),
         ]);
 
+        $document->refreshStatus();
+
         return response()->json($document->load('client'), 201);
     }
 
     public function show(Document $document)
     {
         $this->authorize('view', $document);
+
+        $document->refreshStatus();
 
         return response()->json($document->load('client'));
     }
@@ -86,12 +93,12 @@ class DocumentController extends Controller
         $data = $request->validate([
             'client_id' => ['nullable', 'exists:clients,id'],
             'name' => ['sometimes', 'string'],
-            'status' => ['sometimes', 'string'],
             'validation_date' => ['nullable', 'date'],
             'expiration_date' => ['nullable', 'date'],
         ]);
 
         $document->update($data);
+        $document->refreshStatus();
 
         return response()->json($document->load('client'));
     }

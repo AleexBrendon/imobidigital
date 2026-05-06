@@ -1,30 +1,44 @@
-import { ArrowLeft, Download, Eye, MoreHorizontal, X } from "lucide-react";
+import {
+  ArrowLeft,
+  Download,
+  Eye,
+  MoreHorizontal,
+  Trash2,
+  X,
+} from "lucide-react";
+import { downloadDocumentBlob } from "../../services/documents";
 import type { DocumentItem } from "../../types/document";
-import { DocumentIcon } from "./DocumentCard";
+import { DocumentIcon, StatusBadge } from "./DocumentCard";
 import { DocumentValidationList } from "./DocumentValidationList";
 
 export function DocumentPreviewPanel({
   document,
   onClose,
+  onDelete,
+  onEdit,
 }: {
   document: DocumentItem;
   onClose: () => void;
+  onDelete: () => void;
+  onEdit: () => void;
 }) {
-  function handleView() {
-    alert(`Visualizando documento: ${document.name}`);
+  async function handleView() {
+    const blob = await downloadDocumentBlob(document.id);
+    const fileUrl = URL.createObjectURL(blob);
+
+    window.open(fileUrl, "_blank");
   }
 
-  function handleDownload() {
-    const content = `Documento: ${document.name}\nTipo: ${document.type}\nCliente: ${document.client}`;
-    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
+  async function handleDownload() {
+    const blob = await downloadDocumentBlob(document.id);
+    const fileUrl = URL.createObjectURL(blob);
 
     const link = window.document.createElement("a");
-    link.href = url;
-    link.download = document.name.replace(/\s+/g, "-").toLowerCase();
+    link.href = fileUrl;
+    link.download = document.name;
     link.click();
 
-    URL.revokeObjectURL(url);
+    URL.revokeObjectURL(fileUrl);
   }
 
   return (
@@ -38,7 +52,13 @@ export function DocumentPreviewPanel({
         </button>
 
         <div className="flex items-center gap-2">
-          <MoreHorizontal size={22} className="text-slate-400" />
+          <button
+            onClick={onEdit}
+            className="rounded-lg p-2 text-slate-400 hover:bg-white/5 hover:text-white"
+          >
+            <MoreHorizontal size={22} />
+          </button>
+
           <button
             onClick={onClose}
             className="rounded-lg p-2 text-slate-400 hover:bg-white/5 hover:text-white"
@@ -52,13 +72,17 @@ export function DocumentPreviewPanel({
         <DocumentIcon type={document.type} large />
       </div>
 
-      <div className="mb-5 grid grid-cols-2 gap-3">
+      <div className="mb-5 flex justify-center">
+        <StatusBadge status={document.status} />
+      </div>
+
+      <div className="mb-5 grid grid-cols-3 gap-3">
         <button
           onClick={handleView}
           className="flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-3 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500"
         >
           <Eye size={17} />
-          Visualizar
+          Ver
         </button>
 
         <button
@@ -67,6 +91,14 @@ export function DocumentPreviewPanel({
         >
           <Download size={17} />
           Baixar
+        </button>
+
+        <button
+          onClick={onDelete}
+          className="flex items-center justify-center gap-2 rounded-lg border border-red-500/30 px-3 py-2.5 text-sm font-semibold text-red-300 hover:bg-red-500/10"
+        >
+          <Trash2 size={17} />
+          Excluir
         </button>
       </div>
 
@@ -79,21 +111,25 @@ export function DocumentPreviewPanel({
           <Meta label="Data de Validação" value={document.validationDate} />
           <Meta label="Cliente" value={document.client} />
           <Meta label="Data de Vencimento" value={document.expirationDate} />
+          <Meta
+            label="Tamanho"
+            value={`${(document.size / 1024).toFixed(2)} KB`}
+          />
         </div>
       </div>
 
       <div className="mb-5 h-px bg-white/10" />
 
-      <DocumentValidationList />
+      <DocumentValidationList document={document} />
     </aside>
   );
 }
 
-function Meta({ label, value }: { label: string; value: string }) {
+function Meta({ label, value }: { label: string; value?: string | number }) {
   return (
     <div className="grid grid-cols-[1fr_1fr] gap-3">
       <span className="text-slate-400">{label}</span>
-      <span className="text-slate-100">{value}</span>
+      <span className="break-words text-slate-100">{value || "-"}</span>
     </div>
   );
 }
