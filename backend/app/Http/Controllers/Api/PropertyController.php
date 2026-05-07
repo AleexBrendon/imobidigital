@@ -26,7 +26,7 @@ class PropertyController extends Controller
         }
 
         return response()->json(
-            $query->get()->map(fn ($property) => $this->formatProperty($property))
+            $query->get()->map(fn($property) => $this->formatProperty($property))
         );
     }
 
@@ -160,7 +160,36 @@ class PropertyController extends Controller
 
             'images' => $property->images
                 ->sortByDesc('is_cover')
-                ->map(fn ($image) => asset('storage/' . $image->path))
+                ->map(fn($image) => asset('storage/' . $image->path))
+                ->values(),
+
+            'negotiations' => $property->negotiations
+                ->map(fn($negotiation) => [
+                    'id' => $negotiation->id,
+                    'property_id' => $negotiation->property_id,
+                    'client_id' => $negotiation->client_id,
+                    'name' => $negotiation->client?->name ?? 'Cliente não informado',
+                    'stage' => $negotiation->stage,
+                    'progress' => (int) $negotiation->progress,
+                    'status' => $negotiation->status,
+                    'color' => $negotiation->status === 'Perdido' ? 'red' : 'cyan',
+                ])
+                ->values(),
+
+            'visits' => $property->visits
+                ->map(fn($visit) => [
+                    'id' => $visit->id,
+                    'property_id' => $visit->property_id,
+                    'client_id' => $visit->client_id,
+                    'title' => $visit->title,
+                    'description' => $visit->description,
+                    'scheduled_at' => $visit->scheduled_at,
+                    'status' => $visit->status,
+                    'time' => $visit->scheduled_at
+                        ? \Carbon\Carbon::parse($visit->scheduled_at)->format('d/m/Y H:i')
+                        : 'Sem data',
+                    'color' => $visit->status === 'Realizada' ? 'emerald' : 'violet',
+                ])
                 ->values(),
         ];
     }

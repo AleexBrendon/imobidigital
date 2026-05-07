@@ -12,6 +12,29 @@ export type PropertyType =
   | "Comercial"
   | "Rural";
 
+export type NegotiationItem = {
+  id: number;
+  propertyId: number;
+  clientId: number | null;
+  name: string;
+  stage: string;
+  progress: number;
+  status: string;
+  color: "cyan" | "red";
+};
+
+export type VisitItem = {
+  id: number;
+  propertyId: number;
+  clientId: number | null;
+  title: string;
+  description?: string | null;
+  scheduledAt?: string | null;
+  status: string;
+  time: string;
+  color: "emerald" | "violet";
+};
+
 export type PropertyItem = {
   id: number;
   title: string;
@@ -26,19 +49,9 @@ export type PropertyItem = {
   status: PropertyStatus;
   images: string[];
   ownerName?: string;
-};
+  latitude?: number;
+  longitude?: number;
 
-export type NegotiationItem = {
-  id: number;
-  name: string;
-  stage?: string;
-  progress: number;
-  color: "cyan" | "red";
-};
-
-export type VisitItem = {
-  id: number;
-  title: string;
-  time: string;
-  color: "emerald" | "violet";
+  negotiations?: NegotiationItem[];
+  visits?: VisitItem[];
 };

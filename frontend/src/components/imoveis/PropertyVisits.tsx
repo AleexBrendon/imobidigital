@@ -1,73 +1,122 @@
-import { FileText, MoreHorizontal, ScrollText } from "lucide-react";
+import {
+  FileCheck2,
+  FileText,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  ScrollText,
+  Trash2,
+} from "lucide-react";
+
 import { useState } from "react";
+
 import type { VisitItem } from "../../types/property";
 
-export function PropertyVisits({ visits }: { visits: VisitItem[] }) {
-  const [onlyDocuments, setOnlyDocuments] = useState(false);
-
-  const filtered = onlyDocuments
-    ? visits.filter((visit) => visit.title.includes("Documento"))
-    : visits;
+export function PropertyVisits({
+  visits,
+  onCreate,
+  onEdit,
+  onDelete,
+}: {
+  visits: VisitItem[];
+  onCreate: () => void;
+  onEdit: (item: VisitItem) => void;
+  onDelete: (item: VisitItem) => void;
+}) {
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-[#101c2d]/95 p-5 shadow-[0_18px_45px_rgba(0,0,0,.25)]">
+    <div className="h-[315px] rounded-2xl border border-white/10 bg-[#101c2d]/95 p-4 shadow-[0_18px_45px_rgba(0,0,0,.25)]">
       <div className="mb-5 flex items-center justify-between">
-        <h3 className="text-2xl font-semibold">Visitas</h3>
+        <h3 className="text-xl font-semibold text-white">
+          Visitas
+        </h3>
 
-        <button onClick={() => setOnlyDocuments((current) => !current)}>
-          <MoreHorizontal
-            size={22}
-            className="text-slate-400 hover:text-white"
-          />
-        </button>
-      </div>
-
-      <div className="mb-4">
         <button
-          onClick={() => setOnlyDocuments((current) => !current)}
-          className={`rounded-lg px-3 py-1.5 text-xs ${
-            onlyDocuments
-              ? "bg-indigo-600 text-white"
-              : "border border-white/10 text-slate-400 hover:bg-white/5"
-          }`}
+          onClick={onCreate}
+          className="flex items-center gap-2 rounded-lg bg-cyan-500 px-3 py-1.5 text-xs font-semibold text-slate-950 hover:bg-cyan-400"
         >
-          {onlyDocuments ? "Mostrando documentos" : "Filtrar documentos"}
+          <Plus size={14} />
+          Nova
         </button>
       </div>
 
-      {filtered.length === 0 ? (
-        <p className="text-sm text-slate-400">
-          Nenhuma visita encontrada.
-        </p>
+      {visits.length === 0 ? (
+        <div className="flex h-[220px] items-center justify-center text-sm text-slate-400">
+          Nenhuma visita cadastrada.
+        </div>
       ) : (
-        <div className="max-h-[275px] space-y-2 overflow-auto no-scrollbar">
-          {filtered.map((visit, index) => {
-            const Icon = visit.title.includes("Contrato")
-              ? ScrollText
-              : FileText;
+        <div className="max-h-[245px] space-y-1 overflow-auto pr-2 no-scrollbar">
+          {visits.map((visit, index) => {
+            const Icon = getVisitIcon(visit.title);
 
             return (
-              <div key={visit.id} className="flex gap-4">
+              <div
+                key={visit.id}
+                className="relative flex gap-3 py-1"
+              >
                 <div className="flex flex-col items-center">
                   <div
-                    className={`flex h-11 w-11 items-center justify-center rounded-full ${
+                    className={`flex h-9 w-9 items-center justify-center rounded-full ${
                       visit.color === "emerald"
-                        ? "bg-emerald-500/30 text-emerald-300"
-                        : "bg-violet-500/30 text-violet-300"
+                        ? "bg-emerald-500/25 text-emerald-300"
+                        : "bg-violet-500/25 text-violet-300"
                     }`}
                   >
-                    <Icon size={19} />
+                    <Icon size={17} />
                   </div>
 
-                  {index !== filtered.length - 1 && (
-                    <div className="mt-2 h-8 w-px bg-white/10" />
+                  {index !== visits.length - 1 && (
+                    <div className="mt-1 h-7 w-px bg-white/10" />
                   )}
                 </div>
 
-                <div>
-                  <p className="font-medium text-slate-100">{visit.title}</p>
-                  <p className="text-sm text-slate-400">{visit.time}</p>
+                <div className="min-w-0 flex-1 pt-0.5">
+                  <p className="truncate text-[13px] font-medium text-slate-100">
+                    {visit.title}
+                  </p>
+
+                  <p className="text-xs text-slate-400">
+                    {visit.time}
+                  </p>
                 </div>
+
+                <button
+                  onClick={() =>
+                    setOpenMenuId(
+                      openMenuId === visit.id ? null : visit.id
+                    )
+                  }
+                  className="rounded p-1 text-slate-400 hover:bg-white/5 hover:text-white"
+                >
+                  <MoreHorizontal size={15} />
+                </button>
+
+                {openMenuId === visit.id && (
+                  <div className="absolute right-0 top-8 z-30 w-36 rounded-xl border border-white/10 bg-[#142438] p-1 shadow-2xl">
+                    <button
+                      onClick={() => {
+                        setOpenMenuId(null);
+                        onEdit(visit);
+                      }}
+                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-white/5"
+                    >
+                      <Pencil size={15} />
+                      Editar
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setOpenMenuId(null);
+                        onDelete(visit);
+                      }}
+                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-300 hover:bg-red-500/10"
+                    >
+                      <Trash2 size={15} />
+                      Excluir
+                    </button>
+                  </div>
+                )}
               </div>
             );
           })}
@@ -75,4 +124,16 @@ export function PropertyVisits({ visits }: { visits: VisitItem[] }) {
       )}
     </div>
   );
+}
+
+function getVisitIcon(title: string) {
+  if (title.toLowerCase().includes("contrato")) {
+    return ScrollText;
+  }
+
+  if (title.toLowerCase().includes("validado")) {
+    return FileCheck2;
+  }
+
+  return FileText;
 }
