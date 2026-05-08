@@ -1,8 +1,13 @@
 import { api } from "./api";
-import type { ClientActivity } from "../components/clientes/ClientActivityPanel";
 
-export async function getActivities() {
-  const { data } = await api.get("/activities");
+export async function getActivities<T = unknown>(params?: {
+  subject_type?: string;
+  subject_id?: number;
+  type?: string;
+}) {
+  const { data } = await api.get("/activities", {
+    params,
+  });
 
-  return data as ClientActivity[];
+  return data as T[];
 }

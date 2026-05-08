@@ -73,7 +73,9 @@ export function Clients() {
 
       const [clientsData, activitiesData] = await Promise.all([
         getClients(),
-        getActivities(),
+        getActivities<ClientActivity>({
+          subject_type: "App\\Models\\Client",
+        }),
       ]);
 
       setClients(clientsData.map(normalizeClient));

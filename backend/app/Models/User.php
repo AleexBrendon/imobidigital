@@ -19,6 +19,7 @@ class User extends Authenticatable
         'phone',
         'document',
         'role',
+        'status',
         'password',
     ];
 
@@ -48,5 +49,10 @@ class User extends Authenticatable
     public function isCorretor(): bool
     {
         return $this->role === 'corretor';
+    }
+
+    public function isBlocked(): bool
+    {
+        return $this->status === 'blocked';
     }
 }
