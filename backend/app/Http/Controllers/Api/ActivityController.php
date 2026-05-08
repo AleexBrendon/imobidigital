@@ -10,13 +10,62 @@ class ActivityController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Activity::with('user')->latest();
+        $query = Activity::with('user')
+            ->latest();
 
         if ($request->filled('type')) {
             $query->where('type', $request->type);
         }
 
-        return response()->json($query->limit(50)->get());
+        if ($request->filled('subject_type')) {
+            $query->where('subject_type', $request->subject_type);
+        }
+
+        if ($request->filled('subject_id')) {
+            $query->where('subject_id', $request->subject_id);
+        }
+
+        return response()->json(
+            $query
+                ->limit(50)
+                ->get()
+                ->map(fn($activity) => [
+                    'id' => $activity->id,
+                    'type' => $this->normalizeType($activity->type),
+                    'clientName' => $this->extractClientName($activity),
+                    'userName' => $activity->user?->name ?? 'Sistema',
+                    'date' => optional($activity->created_at)->format('d/m/Y H:i'),
+                    'title' => $activity->title,
+                    'description' => $activity->description,
+                    'created_at' => $activity->created_at,
+                ])
+        );
+    }
+
+    private function normalizeType(?string $type): string
+    {
+        return match ($type) {
+            'created', 'updated', 'deleted', 'document' => $type,
+            default => 'document',
+        };
+    }
+
+    private function extractClientName(Activity $activity): string
+    {
+        if ($activity->subject_type === \App\Models\Client::class && $activity->subject) {
+            return $activity->subject->name;
+        }
+
+        if ($activity->description) {
+            return str_replace([
+                'Cliente ',
+                ' foi cadastrado.',
+                ' foi atualizado.',
+                ' foi removido.',
+            ], '', $activity->description);
+        }
+
+        return 'Cliente';
     }
 
     public function store(Request $request)

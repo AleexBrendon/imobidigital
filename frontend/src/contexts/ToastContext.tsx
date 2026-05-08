@@ -5,7 +5,10 @@ import {
   useMemo,
   useState,
 } from "react";
-import { Toast, type ToastItem, type ToastType } from "../components/ui/Toast";
+
+import type { ReactNode } from "react";
+import type { ToastItem, ToastType } from "../components/ui/Toast";
+import { ToastContainer } from "../components/ui/ToastContainer";
 
 type ToastContextValue = {
   success: (message: string) => void;
@@ -15,7 +18,7 @@ type ToastContextValue = {
 
 const ToastContext = createContext<ToastContextValue | null>(null);
 
-export function ToastProvider({ children }: { children: React.ReactNode }) {
+export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
   const removeToast = useCallback((id: string) => {
@@ -55,11 +58,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     <ToastContext.Provider value={value}>
       {children}
 
-      <div className="fixed right-5 top-5 z-[9999] flex flex-col gap-3">
-        {toasts.map((toast) => (
-          <Toast key={toast.id} toast={toast} onClose={removeToast} />
-        ))}
-      </div>
+      <ToastContainer toasts={toasts} onClose={removeToast} />
     </ToastContext.Provider>
   );
 }

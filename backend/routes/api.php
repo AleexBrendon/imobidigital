@@ -23,6 +23,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     //CLIENTS ROUTES
     Route::apiResource('clients', ClientController::class);
+    Route::get('/clients/{client}/activities', [ClientController::class, 'activities']);
+    Route::get('/clients/{client}/documents', [ClientController::class, 'documents']);
+    Route::get('/clients/{client}/contracts', [ClientController::class, 'contracts']);
+    Route::get('/clients/{client}/properties', [ClientController::class, 'properties']);
     //DOCUMENTS ROUTES
     Route::apiResource('documents', DocumentController::class);
     Route::get('/documents/{document}/download', [DocumentController::class, 'download']);

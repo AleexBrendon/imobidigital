@@ -4,14 +4,15 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ClientActivityPanel,
   type ClientActivity,
-  type ClientActivityType,
 } from "../components/clientes/ClientActivityPanel";
 
 import { ClientFilters } from "../components/clientes/ClientFilters";
 import { ClientFormPanel } from "../components/clientes/ClientFormPanel";
 import { ClientTable } from "../components/clientes/ClientTable";
+import { ClientProfileModal } from "../components/clientes/ClientProfileModal";
 
 import type { ClientItem } from "../types/client";
+
 import {
   createClient,
   deleteClient,
@@ -19,6 +20,17 @@ import {
   updateClient,
   type ClientPayload,
 } from "../services/clients";
+
+import { getActivities } from "../services/activities";
+
+import {
+  getClientActivities,
+  getClientContracts,
+  getClientDocuments,
+  getClientProperties,
+} from "../services/clientProfile";
+
+import { useToast } from "../contexts/ToastContext";
 
 type Filter = "all" | "comprador" | "locador" | "locatario" | "investidor";
 
@@ -34,49 +46,79 @@ function normalizeClient(client: any): ClientItem {
   };
 }
 
-function createActivity(
-  text: string,
-  type: ClientActivityType
-): ClientActivity {
-  return {
-    id: crypto.randomUUID(),
-    text,
-    type,
-    date: new Date().toLocaleString("pt-BR"),
-  };
-}
-
 export function Clients() {
+  const toast = useToast();
+
   const [clients, setClients] = useState<ClientItem[]>([]);
   const [filter, setFilter] = useState<Filter>("all");
+
   const [selectedClientId, setSelectedClientId] = useState<number | null>(null);
+  const [profileClientId, setProfileClientId] = useState<number | null>(null);
+
   const [editingClient, setEditingClient] = useState<ClientItem | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
+
   const [activities, setActivities] = useState<ClientActivity[]>([]);
 
-  function addActivity(text: string, type: ClientActivityType) {
-    setActivities((prev) => [createActivity(text, type), ...prev]);
-  }
+  const [clientActivities, setClientActivities] = useState<any[]>([]);
+  const [clientDocuments, setClientDocuments] = useState<any[]>([]);
+  const [clientContracts, setClientContracts] = useState<any[]>([]);
+  const [clientProperties, setClientProperties] = useState<any[]>([]);
+  const [loadingProfile, setLoadingProfile] = useState(false);
 
   async function loadClients() {
     try {
       setLoading(true);
 
-      const data = await getClients();
+      const [clientsData, activitiesData] = await Promise.all([
+        getClients(),
+        getActivities(),
+      ]);
 
-      setClients(data.map(normalizeClient));
+      setClients(clientsData.map(normalizeClient));
+      setActivities(activitiesData);
     } catch (error) {
       console.error(error);
-      alert("Erro ao carregar clientes.");
+      toast.error("Erro ao carregar clientes.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadClientProfile(clientId: number) {
+    try {
+      setLoadingProfile(true);
+
+      const [activitiesData, documentsData, contractsData, propertiesData] =
+        await Promise.all([
+          getClientActivities(clientId),
+          getClientDocuments(clientId),
+          getClientContracts(clientId),
+          getClientProperties(clientId),
+        ]);
+
+      setClientActivities(activitiesData);
+      setClientDocuments(documentsData);
+      setClientContracts(contractsData);
+      setClientProperties(propertiesData);
+    } catch (error) {
+      console.error(error);
+      toast.error("Erro ao carregar dados do perfil do cliente.");
+    } finally {
+      setLoadingProfile(false);
     }
   }
 
   useEffect(() => {
     loadClients();
   }, []);
+
+  useEffect(() => {
+    if (!profileClientId || showForm) return;
+
+    loadClientProfile(profileClientId);
+  }, [profileClientId, showForm]);
 
   const filteredClients = useMemo(() => {
     if (filter === "comprador") {
@@ -98,6 +140,10 @@ export function Clients() {
     return clients;
   }, [clients, filter]);
 
+  const profileClient = useMemo(() => {
+    return clients.find((client) => client.id === profileClientId) ?? null;
+  }, [clients, profileClientId]);
+
   async function saveClient(data: Omit<ClientItem, "id" | "avatar">) {
     try {
       const payload: ClientPayload = {
@@ -109,44 +155,36 @@ export function Clients() {
       };
 
       if (editingClient) {
-        const updated = await updateClient(editingClient.id, payload);
-        const normalized = normalizeClient(updated);
+        await updateClient(editingClient.id, payload);
 
-        setClients((current) =>
-          current.map((client) =>
-            client.id === editingClient.id
-              ? {
-                  ...client,
-                  ...normalized,
-                  avatar: client.avatar,
-                }
-              : client
-          )
-        );
-
-        addActivity(`Cliente atualizado: ${normalized.name}`, "updated");
+        toast.success(`Cliente ${data.name} atualizado com sucesso.`);
 
         setEditingClient(null);
         setShowForm(false);
+        setProfileClientId(null);
+
+        await loadClients();
         return;
       }
 
       const created = await createClient(payload);
       const normalized = normalizeClient(created);
 
-      setClients((current) => [normalized, ...current]);
+      toast.success(`Cliente ${normalized.name} cadastrado com sucesso.`);
+
       setSelectedClientId(normalized.id);
       setShowForm(false);
+      setProfileClientId(null);
 
-      addActivity(`Novo cliente cadastrado: ${normalized.name}`, "created");
+      await loadClients();
     } catch (error) {
       console.error(error);
-      alert("Erro ao salvar cliente.");
+      toast.error("Erro ao salvar cliente.");
     }
   }
 
   async function handleDeleteClient(id: number) {
-    const clientToDelete = clients.find((client) => client.id === id);
+    const client = clients.find((client) => client.id === id);
 
     const confirmDelete = confirm("Deseja excluir este cliente?");
 
@@ -155,41 +193,60 @@ export function Clients() {
     try {
       await deleteClient(id);
 
-      setClients((current) => current.filter((client) => client.id !== id));
-
-      if (clientToDelete) {
-        addActivity(`Cliente removido: ${clientToDelete.name}`, "deleted");
-      }
+      toast.info(
+        client
+          ? `Cliente ${client.name} foi excluído.`
+          : "Cliente excluído com sucesso."
+      );
 
       if (selectedClientId === id) {
         setSelectedClientId(null);
+      }
+
+      if (profileClientId === id) {
+        setProfileClientId(null);
       }
 
       if (editingClient?.id === id) {
         setEditingClient(null);
         setShowForm(false);
       }
+
+      await loadClients();
     } catch (error) {
       console.error(error);
-      alert("Erro ao excluir cliente.");
+      toast.error("Erro ao excluir cliente.");
     }
   }
 
   function openCreateForm() {
     setEditingClient(null);
     setSelectedClientId(null);
+    setProfileClientId(null);
     setShowForm(true);
   }
 
   function openEditForm(client: ClientItem) {
     setEditingClient(client);
     setSelectedClientId(client.id);
+    setProfileClientId(null);
     setShowForm(true);
+  }
+
+  function openProfileModal(client: ClientItem) {
+    setSelectedClientId(client.id);
+    setEditingClient(null);
+    setShowForm(false);
+    setProfileClientId(client.id);
   }
 
   function closeForm() {
     setEditingClient(null);
     setShowForm(false);
+  }
+
+  function closeProfileModal() {
+    setProfileClientId(null);
   }
 
   return (
@@ -223,7 +280,7 @@ export function Clients() {
           <ClientTable
             clients={filteredClients}
             selectedClientId={selectedClientId}
-            onSelect={(client) => setSelectedClientId(client.id)}
+            onSelect={openProfileModal}
             onEdit={openEditForm}
             onDelete={handleDeleteClient}
           />
@@ -241,6 +298,17 @@ export function Clients() {
           />
         )}
       </aside>
+
+      <ClientProfileModal
+        open={!!profileClient && !showForm}
+        client={profileClient}
+        loading={loadingProfile}
+        activities={clientActivities}
+        documents={clientDocuments}
+        contracts={clientContracts}
+        properties={clientProperties}
+        onClose={closeProfileModal}
+      />
     </div>
   );
 }
