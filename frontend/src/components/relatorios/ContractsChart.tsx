@@ -6,13 +6,18 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { contractsData } from "../data/reports";
 
-export function ContractsChart() {
+import type { ContractsChartItem } from "../../types/reports";
+
+export function ContractsChart({
+  data = [],
+}: {
+  data?: ContractsChartItem[];
+}) {
   return (
-    <div className="h-[220px]">
-      <ResponsiveContainer>
-        <BarChart data={contractsData}>
+    <div className="h-[220px] w-full min-w-0">
+      <ResponsiveContainer width="100%" height={220}>
+        <BarChart data={data}>
           <XAxis dataKey="name" stroke="#64748b" />
           <YAxis stroke="#64748b" />
 
@@ -24,7 +29,11 @@ export function ContractsChart() {
             }}
           />
 
-          <Bar dataKey="value" fill="#6366f1" radius={[6, 6, 0, 0]} />
+          <Bar
+            dataKey="value"
+            fill="#6366f1"
+            radius={[6, 6, 0, 0]}
+          />
         </BarChart>
       </ResponsiveContainer>
     </div>

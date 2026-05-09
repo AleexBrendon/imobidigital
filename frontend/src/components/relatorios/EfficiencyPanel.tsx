@@ -1,15 +1,26 @@
 import { Metric } from "../ui/Metric";
 import { Card } from "../ui/Card";
 
-export function EfficiencyPanel() {
+import type { EfficiencyAgent } from "../../types/reports";
+
+export function EfficiencyPanel({
+  agents = [],
+}: {
+  agents?: EfficiencyAgent[];
+}) {
   return (
     <Card title="Eficiência da Validação de Documentos">
       <div className="space-y-3">
-        <Metric name="Maria Lima" value="55%" color="green" />
-        <Metric name="João Silva" value="96%" color="cyan" />
+        {agents.map((agent) => (
+          <Metric
+            key={agent.name}
+            name={agent.name}
+            value={`${agent.accuracy}%`}
+            color={agent.accuracy >= 80 ? "cyan" : "green"}
+          />
+        ))}
       </div>
 
-      {/* tabela resumida */}
       <div className="mt-4 border-t border-white/10 pt-4 text-sm">
         <div className="mb-2 grid grid-cols-4 text-slate-400">
           <span>Agente</span>
@@ -18,19 +29,14 @@ export function EfficiencyPanel() {
           <span>Erros</span>
         </div>
 
-        <div className="grid grid-cols-4 text-slate-200">
-          <span>Maria</span>
-          <span className="text-green-400">55%</span>
-          <span>100%</span>
-          <span className="text-red-400">0</span>
-        </div>
-
-        <div className="grid grid-cols-4 text-slate-200">
-          <span>João</span>
-          <span className="text-cyan-400">96%</span>
-          <span>1%</span>
-          <span className="text-red-400">0</span>
-        </div>
+        {agents.map((agent) => (
+          <div key={agent.name} className="grid grid-cols-4 gap-3 text-center text-slate-200">
+            <span>{agent.name}</span>
+            <span className="text-cyan-400">{agent.accuracy}%</span>
+            <span>{agent.pending}</span>
+            <span className="text-red-400">{agent.errors}</span>
+          </div>
+        ))}
       </div>
     </Card>
   );

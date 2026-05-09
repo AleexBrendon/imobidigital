@@ -1,12 +1,24 @@
 import { KPI } from "../ui/KPI";
+import type { ReportKpi } from "../../types/reports";
 
-export function KpiPanel() {
+export function KpiPanel({
+  kpis = [],
+}: {
+  kpis?: ReportKpi[];
+}) {
+  if (!Array.isArray(kpis)) return null;
+
   return (
     <div className="space-y-4">
-      <KPI title="Acurácia IA" value="91%" />
-      <KPI title="Acurácia Geral" value="82%" />
-      <KPI title="Pendentes" value="10%" trend="down" />
-      <KPI title="Tempo" value="2h 40s" trend="down" />
+      {kpis.map((kpi) => (
+        <KPI
+          key={kpi.title}
+          title={kpi.title}
+          value={kpi.value}
+          trend={kpi.trend}
+          compact
+        />
+      ))}
     </div>
   );
 }
