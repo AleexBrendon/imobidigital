@@ -38,7 +38,7 @@ export function PropertyNegotiation({
         </button>
       </div>
 
-      <div className="grid grid-cols-3 gap-x-5 gap-y-2 border-t border-white/10 pt-3">
+      <div className="grid max-h-[90px] grid-cols-3 gap-x-5 gap-y-2 overflow-y-auto border-t border-white/10 pt-3 pr-2 no-scrollbar">
         {negotiations.map((item) => (
           <div
             key={item.id}

@@ -87,7 +87,7 @@ export function ClientProfileModal({
             </div>
           </header>
 
-          <main className="overflow-y-auto p-6">
+          <main className="overflow-y-auto p-6 no-scrollbar">
             {loading ? (
               <Empty text="Carregando dados do cliente..." />
             ) : (

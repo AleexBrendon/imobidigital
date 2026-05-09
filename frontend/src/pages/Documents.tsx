@@ -166,7 +166,7 @@ export function Documents() {
             Nenhum documento encontrado.
           </div>
         ) : (
-          <div className="grid max-h-[calc(100vh-245px)] grid-cols-6 gap-3 overflow-auto pr-1 no-scrollbar">
+          <div className="grid max-h-[calc(100vh-245px)] grid-cols-6 gap-3 overflow-y-auto pr-1 no-scrollbar">
             {filteredDocuments.map((document) => (
               <DocumentCard
                 key={document.id}

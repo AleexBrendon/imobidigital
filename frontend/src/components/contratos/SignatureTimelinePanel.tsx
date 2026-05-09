@@ -50,7 +50,7 @@ export function SignatureTimelinePanel({
         ))}
       </div>
 
-      <div className="space-y-3">
+      <div className="max-h-[260px] overflow-y-auto pr-2 no-scrollbar">
         {events.length === 0 ? (
           <p className="text-sm text-slate-400">
             Nenhuma assinatura registrada.

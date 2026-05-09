@@ -10,7 +10,7 @@ export function ContractDocumentsPanel({
     <div className="rounded-2xl border border-white/10 bg-[#101c2d]/95 p-5">
       <h3 className="mb-5 text-xl font-semibold">Documentos</h3>
 
-      <div className="space-y-3">
+      <div className="max-h-[245px] space-y-3 overflow-y-auto pr-2 no-scrollbar">
         {documents.map((doc) => {
           const isValid =
             doc.status === "Autenticado em Cartório";

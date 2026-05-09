@@ -228,17 +228,19 @@ export function Users() {
             Carregando usuários...
           </div>
         ) : (
-          <UserTable
-            users={filteredUsers}
-            selectedUserId={selectedUserId}
-            onSelect={(user) => setSelectedUserId(user.id)}
-            onEdit={handleOpenEditForm}
-            onDelete={handleDeleteUser}
-          />
+          <div className="max-h-[calc(100vh-245px)] overflow-y-auto pr-1 no-scrollbar">
+            <UserTable
+              users={filteredUsers}
+              selectedUserId={selectedUserId}
+              onSelect={(user) => setSelectedUserId(user.id)}
+              onEdit={handleOpenEditForm}
+              onDelete={handleDeleteUser}
+            />
+          </div>
         )}
       </section>
 
-      <aside className="space-y-5">
+      <aside className="max-h-[calc(100vh-120px)] space-y-5 overflow-y-auto pr-2 no-scrollbar">
         <UserActivityPanel activities={activities} />
 
         {showForm && (

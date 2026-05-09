@@ -279,17 +279,19 @@ export function Clients() {
             Carregando clientes...
           </div>
         ) : (
-          <ClientTable
-            clients={filteredClients}
-            selectedClientId={selectedClientId}
-            onSelect={openProfileModal}
-            onEdit={openEditForm}
-            onDelete={handleDeleteClient}
-          />
+          <div className="max-h-[calc(100vh-245px)] overflow-y-auto pr-1 no-scrollbar">
+            <ClientTable
+              clients={filteredClients}
+              selectedClientId={selectedClientId}
+              onSelect={openProfileModal}
+              onEdit={openEditForm}
+              onDelete={handleDeleteClient}
+            />
+          </div>
         )}
       </section>
 
-      <aside className="space-y-5">
+      <aside className="max-h-[calc(100vh-120px)] space-y-5 overflow-y-auto pr-2 no-scrollbar">
         <ClientActivityPanel activities={activities} />
 
         {showForm && (

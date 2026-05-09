@@ -46,7 +46,7 @@ export function PropertyVisits({
           Nenhuma visita cadastrada.
         </div>
       ) : (
-        <div className="max-h-[245px] space-y-1 overflow-auto pr-2 no-scrollbar">
+        <div className="max-h-[245px] space-y-1 overflow-y-auto pr-2 no-scrollbar">
           {visits.map((visit, index) => {
             const Icon = getVisitIcon(visit.title);
 
