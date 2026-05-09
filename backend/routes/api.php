@@ -45,6 +45,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/property-negotiations/{negotiation}', [PropertyNegotiationController::class, 'show']);
     Route::put('/property-negotiations/{negotiation}', [PropertyNegotiationController::class, 'update']);
     Route::delete('/property-negotiations/{negotiation}', [PropertyNegotiationController::class, 'destroy']);
+    Route::middleware('auth:sanctum')->patch(
+        '/property-negotiations/{propertyNegotiation}/stage',
+        [PropertyNegotiationController::class, 'updateStage']
+    );
     //VISITS ROUTES
     Route::get('/property-visits', [PropertyVisitController::class, 'index']);
     Route::post('/properties/{property}/visits', [PropertyVisitController::class, 'store']);

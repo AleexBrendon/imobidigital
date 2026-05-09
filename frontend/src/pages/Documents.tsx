@@ -1,4 +1,4 @@
-import { MoreHorizontal, Upload } from "lucide-react";
+import { Upload } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { DocumentCard } from "../components/documentos/DocumentCard";
 import { DocumentEditModal } from "../components/documentos/DocumentEditModal";
@@ -144,8 +144,6 @@ export function Documents() {
                 }}
               />
             </label>
-
-            <MoreHorizontal size={22} className="text-slate-400" />
           </div>
         </div>
 

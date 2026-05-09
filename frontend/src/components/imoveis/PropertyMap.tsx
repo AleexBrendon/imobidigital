@@ -1,4 +1,4 @@
-import { ChevronDown, MoreHorizontal } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
 import L from "leaflet";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
@@ -80,8 +80,6 @@ export function PropertyMap({
         <h3 className="text-xl font-semibold text-white">
           Localização do Imóvel
         </h3>
-
-        <MoreHorizontal size={20} className="text-slate-400" />
       </div>
 
       <div className="mb-2 flex items-center gap-2 text-xs text-slate-400">

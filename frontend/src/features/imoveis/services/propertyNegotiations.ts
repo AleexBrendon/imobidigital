@@ -31,3 +31,11 @@ export async function updatePropertyNegotiation(
 export async function deletePropertyNegotiation(negotiationId: number) {
   await api.delete(`/property-negotiations/${negotiationId}`);
 }
+
+export async function updateNegotiationStage(id: number, stage: string) {
+  const response = await api.patch(`/property-negotiations/${id}/stage`, {
+    stage,
+  });
+
+  return response.data;
+}

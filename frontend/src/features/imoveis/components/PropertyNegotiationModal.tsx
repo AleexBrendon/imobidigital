@@ -6,6 +6,16 @@ import type {
   NegotiationPayload,
 } from "../services/propertyRelations";
 
+const STAGES = [
+  "Prospecção",
+  "Atendimento",
+  "Visita",
+  "Proposta",
+  "Contrato",
+  "Fechado",
+  "Perdido",
+];
+
 export function PropertyNegotiationModal({
   open,
   clients,
@@ -26,7 +36,16 @@ export function PropertyNegotiationModal({
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setClientId(editingItem?.clientId ? String(editingItem.clientId) : "");
+    if (!open) return;
+
+    setClientId(
+      editingItem?.clientId
+        ? String(editingItem.clientId)
+        : editingItem?.clientId
+          ? String(editingItem.clientId)
+          : ""
+    );
+
     setStage(editingItem?.stage ?? "Prospecção");
     setProgress(editingItem?.progress ?? 0);
     setStatus(editingItem?.status ?? "Ativo");
@@ -34,9 +53,10 @@ export function PropertyNegotiationModal({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    setLoading(true);
 
     try {
+      setLoading(true);
+
       await onSubmit({
         client_id: clientId ? Number(clientId) : null,
         stage,
@@ -58,7 +78,10 @@ export function PropertyNegotiationModal({
         onSubmit={handleSubmit}
         className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#101c2d] p-5 shadow-2xl"
       >
-        <Header title={editingItem ? "Editar negociação" : "Nova negociação"} onClose={onClose} />
+        <Header
+          title={editingItem ? "Editar negociação" : "Nova negociação"}
+          onClose={onClose}
+        />
 
         <div className="space-y-4">
           <Field label="Cliente">
@@ -68,6 +91,7 @@ export function PropertyNegotiationModal({
               className="h-11 w-full rounded-lg border border-white/10 bg-[#142438] px-3 text-white outline-none"
             >
               <option value="">Sem cliente</option>
+
               {clients.map((client) => (
                 <option key={client.id} value={client.id}>
                   {client.name}
@@ -77,21 +101,27 @@ export function PropertyNegotiationModal({
           </Field>
 
           <Field label="Etapa">
-            <input
+            <select
               value={stage}
               onChange={(e) => setStage(e.target.value)}
               className="h-11 w-full rounded-lg border border-white/10 bg-[#142438] px-3 text-white outline-none"
-            />
+            >
+              {STAGES.map((stageOption) => (
+                <option key={stageOption} value={stageOption}>
+                  {stageOption}
+                </option>
+              ))}
+            </select>
           </Field>
 
-          <Field label="Progresso (%)">
+          <Field label={`Progresso: ${progress}%`}>
             <input
-              type="number"
+              type="range"
               min={0}
               max={100}
               value={progress}
               onChange={(e) => setProgress(Number(e.target.value))}
-              className="h-11 w-full rounded-lg border border-white/10 bg-[#142438] px-3 text-white outline-none"
+              className="w-full accent-cyan-400"
             />
           </Field>
 
@@ -101,9 +131,9 @@ export function PropertyNegotiationModal({
               onChange={(e) => setStatus(e.target.value)}
               className="h-11 w-full rounded-lg border border-white/10 bg-[#142438] px-3 text-white outline-none"
             >
-              <option>Ativo</option>
-              <option>Fechado</option>
-              <option>Perdido</option>
+              <option value="Ativo">Ativo</option>
+              <option value="Fechado">Fechado</option>
+              <option value="Perdido">Perdido</option>
             </select>
           </Field>
         </div>
@@ -114,18 +144,35 @@ export function PropertyNegotiationModal({
   );
 }
 
-function Header({ title, onClose }: { title: string; onClose: () => void }) {
+function Header({
+  title,
+  onClose,
+}: {
+  title: string;
+  onClose: () => void;
+}) {
   return (
     <div className="mb-5 flex items-center justify-between">
       <h3 className="text-xl font-semibold text-white">{title}</h3>
-      <button type="button" onClick={onClose} className="rounded-lg p-2 text-slate-400 hover:bg-white/5 hover:text-white">
+
+      <button
+        type="button"
+        onClick={onClose}
+        className="rounded-lg p-2 text-slate-400 hover:bg-white/5 hover:text-white"
+      >
         <X size={20} />
       </button>
     </div>
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
     <label className="block">
       <span className="mb-2 block text-sm text-slate-300">{label}</span>
@@ -134,13 +181,28 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function Actions({ loading, onClose }: { loading: boolean; onClose: () => void }) {
+function Actions({
+  loading,
+  onClose,
+}: {
+  loading: boolean;
+  onClose: () => void;
+}) {
   return (
     <div className="mt-6 flex justify-end gap-3">
-      <button type="button" onClick={onClose} className="rounded-lg border border-white/10 px-4 py-2 text-sm text-slate-300 hover:bg-white/5">
+      <button
+        type="button"
+        onClick={onClose}
+        className="rounded-lg border border-white/10 px-4 py-2 text-sm text-slate-300 hover:bg-white/5"
+      >
         Cancelar
       </button>
-      <button type="submit" disabled={loading} className="rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-cyan-400">
+
+      <button
+        type="submit"
+        disabled={loading}
+        className="rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
+      >
         {loading ? "Salvando..." : "Salvar"}
       </button>
     </div>

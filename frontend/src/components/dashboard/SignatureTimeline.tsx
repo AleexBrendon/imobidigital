@@ -1,33 +1,71 @@
 import { Card } from "./Card";
 import { SectionHeader } from "./SectionHeader";
 
-export function SignatureTimeline() {
+type Timeline = {
+  contract: string;
+  code: string;
+  progress: number;
+  steps: {
+    label: string;
+    completed: boolean;
+  }[];
+};
+
+export function SignatureTimeline({
+  timeline,
+}: {
+  timeline?: Timeline;
+}) {
+  if (!timeline) return null;
+
   return (
-    <Card className="border-cyan-400/70 shadow-[0_0_24px_rgba(34,211,238,.35)]">
+    <Card className="border-cyan-400/40 shadow-[0_0_40px_rgba(34,211,238,.15)]">
       <SectionHeader title="Linha do Tempo de Assinaturas" />
 
       <p className="mb-5 text-sm text-slate-400">
-        Contrato de contracto → SH:0719-2019
+        {timeline.contract} → {timeline.code}
       </p>
 
-      <div className="relative mb-5 flex items-center justify-between">
-        {["Locador", "Locatário", "Fiador", "Testemunhas"].map((item, index) => (
-          <div key={item} className="z-10 text-center">
+      <div className="relative mb-6 flex items-center justify-between">
+        {timeline.steps.map((step, index) => (
+          <div
+            key={step.label}
+            className="z-10 text-center"
+          >
             <div
-              className={`mx-auto mb-2 h-5 w-5 rounded-full ${
-                index < 3 ? "bg-cyan-400" : "bg-slate-600"
-              }`}
+              className={`
+                mx-auto mb-3 h-6 w-6 rounded-full border-4
+                ${
+                  step.completed
+                    ? "border-cyan-300 bg-cyan-400 shadow-[0_0_18px_rgba(34,211,238,.7)]"
+                    : "border-slate-600 bg-slate-700"
+                }
+              `}
             />
-            <span className="text-xs text-slate-300">{item}</span>
+
+            <span className="text-xs text-slate-300">
+              {step.label}
+            </span>
           </div>
         ))}
 
-        <div className="absolute left-5 right-5 top-2 h-0.5 bg-slate-700" />
-        <div className="absolute left-5 top-2 h-0.5 w-[66%] bg-cyan-400" />
+        <div className="absolute left-7 right-7 top-3 h-[3px] rounded-full bg-slate-700" />
+
+        <div
+          className="absolute left-7 top-3 h-[3px] rounded-full bg-cyan-400 shadow-[0_0_14px_rgba(34,211,238,.6)]"
+          style={{
+            width: `${timeline.progress}%`,
+          }}
+        />
       </div>
 
       <div className="h-2 rounded-full bg-slate-700">
-        <div className="h-2 w-[72%] rounded-full bg-gradient-to-r from-indigo-500 to-cyan-400" />
+        <div
+          className="h-2 rounded-full bg-gradient-to-r from-indigo-500 to-cyan-400"
+          style={{
+            width: `${timeline.progress}%`,
+          }}
+        />
       </div>
     </Card>
   );

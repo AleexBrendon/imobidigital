@@ -66,4 +66,17 @@ class PropertyNegotiationController extends Controller
             'message' => 'Negociação removida',
         ]);
     }
+
+    public function updateStage(Request $request, PropertyNegotiation $propertyNegotiation)
+    {
+        $data = $request->validate([
+            'stage' => ['required', 'string', 'in:Lead,Ativo,Proposta,Fechamento'],
+        ]);
+
+        $propertyNegotiation->update([
+            'stage' => $data['stage'],
+        ]);
+
+        return response()->json($propertyNegotiation->load(['client', 'property']));
+    }
 }

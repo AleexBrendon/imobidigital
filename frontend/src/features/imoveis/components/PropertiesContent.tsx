@@ -8,12 +8,15 @@ import { PropertyNegotiation } from "../../../components/imoveis/PropertyNegotia
 import { PropertyNegotiationModal } from "./PropertyNegotiationModal";
 import { PropertyVisits } from "./PropertyVisits";
 import { PropertyVisitModal } from "./PropertyVisitModal";
+
 import type {
   NegotiationItem,
   PropertyItem,
   VisitItem,
 } from "../../../types/property";
+
 import type { PropertyFormData } from "../types/propertyForm";
+
 import type {
   ClientOption,
   NegotiationPayload,
@@ -77,30 +80,15 @@ export function PropertiesContent({
   ) => Promise<void>;
   onDeleteVisit: (visitId: number) => Promise<void>;
 }) {
-  const negotiations = selectedProperty.negotiations ?? [];
   const visits = selectedProperty.visits ?? [];
 
   const [showNegotiationModal, setShowNegotiationModal] = useState(false);
+
   const [editingNegotiation, setEditingNegotiation] =
     useState<NegotiationItem | null>(null);
 
   const [showVisitModal, setShowVisitModal] = useState(false);
   const [editingVisit, setEditingVisit] = useState<VisitItem | null>(null);
-
-  function openCreateNegotiation() {
-    setEditingNegotiation(null);
-    setShowNegotiationModal(true);
-  }
-
-  function openEditNegotiation(item: NegotiationItem) {
-    setEditingNegotiation(item);
-    setShowNegotiationModal(true);
-  }
-
-  function closeNegotiationModal() {
-    setEditingNegotiation(null);
-    setShowNegotiationModal(false);
-  }
 
   function openCreateVisit() {
     setEditingVisit(null);
@@ -127,9 +115,15 @@ export function PropertiesContent({
           />
 
           <PropertyNegotiation
-            negotiations={negotiations}
-            onCreate={openCreateNegotiation}
-            onEdit={openEditNegotiation}
+            negotiations={selectedProperty.negotiations}
+            onCreate={() => {
+              setEditingNegotiation(null);
+              setShowNegotiationModal(true);
+            }}
+            onEdit={(item) => {
+              setEditingNegotiation(item);
+              setShowNegotiationModal(true);
+            }}
             onDelete={(item) => onDeleteNegotiation(item.id)}
           />
         </section>
@@ -177,7 +171,10 @@ export function PropertiesContent({
         open={showNegotiationModal}
         clients={clients}
         editingItem={editingNegotiation}
-        onClose={closeNegotiationModal}
+        onClose={() => {
+          setShowNegotiationModal(false);
+          setEditingNegotiation(null);
+        }}
         onSubmit={async (data) => {
           await onSaveNegotiation(
             selectedProperty.id,
@@ -185,7 +182,8 @@ export function PropertiesContent({
             data
           );
 
-          closeNegotiationModal();
+          setShowNegotiationModal(false);
+          setEditingNegotiation(null);
         }}
       />
 
