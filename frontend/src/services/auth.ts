@@ -16,6 +16,16 @@ type RegisterData = {
   password_confirmation: string;
 };
 
+export type LoggedUser = {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  phone?: string | null;
+  document?: string | null;
+  avatar?: string | null;
+};
+
 export async function login(data: LoginData) {
   const response = await api.post("/login", data);
 
@@ -43,4 +53,29 @@ export async function logout() {
 
 export function isAuthenticated() {
   return !!localStorage.getItem("token");
+}
+
+export async function getMe() {
+  const { data } = await api.get("/me");
+
+  return (data.user ?? data) as LoggedUser;
+}
+
+export type UpdateProfilePayload = {
+  name: string;
+  email: string;
+  phone?: string;
+  document?: string;
+  password?: string;
+  password_confirmation?: string;
+};
+
+export async function updateMe(payload: UpdateProfilePayload) {
+  const { data } = await api.put("/me", payload);
+
+  const user = data.user ?? data;
+
+  localStorage.setItem("user", JSON.stringify(user));
+
+  return user as LoggedUser;
 }

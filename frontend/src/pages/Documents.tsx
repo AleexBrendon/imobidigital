@@ -1,5 +1,7 @@
 import { Upload } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { matchesSearch } from "../utils/search";
 import { DocumentCard } from "../components/documentos/DocumentCard";
 import { DocumentEditModal } from "../components/documentos/DocumentEditModal";
 import {
@@ -16,6 +18,9 @@ import {
 import type { DocumentItem } from "../types/document";
 
 export function Documents() {
+  const [searchParams] = useSearchParams();
+  const search = searchParams.get("q") ?? "";
+
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [selectedDocument, setSelectedDocument] = useState<DocumentItem | null>(
     null
@@ -62,9 +67,14 @@ export function Documents() {
 
   const filteredDocuments = useMemo(() => {
     return documents.filter((document) => {
-      return clientFilter === "Todos" || document.client === clientFilter;
+      const matchesClient =
+        clientFilter === "Todos" || document.client === clientFilter;
+
+      const matchesGlobalSearch = matchesSearch(document, search);
+
+      return matchesClient && matchesGlobalSearch;
     });
-  }, [documents, clientFilter]);
+  }, [documents, clientFilter, search]);
 
   async function handleUpload(file: File) {
     setUploading(true);

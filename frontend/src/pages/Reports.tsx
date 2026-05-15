@@ -4,7 +4,7 @@ import { RevenueChart } from "../components/relatorios/RevenueChart";
 import { ContractsChart } from "../components/relatorios/ContractsChart";
 import { FunnelChart } from "../components/relatorios/FunnelChart";
 import { KpiPanel } from "../components/relatorios/KpiPanel";
-import { EfficiencyPanel } from "../components/relatorios/EfficiencyPanel";
+//import { EfficiencyPanel } from "../components/relatorios/EfficiencyPanel";
 import { DocumentsStatusChart } from "../components/relatorios/DocumentsStatusChart";
 import { ContractsByMonthChart } from "../components/relatorios/ContractsByMonthChart";
 import { ContractsTypeChart } from "../components/relatorios/ContractsTypeChart";

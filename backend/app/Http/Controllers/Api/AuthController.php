@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Company;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
 
 class AuthController extends Controller
@@ -84,6 +85,39 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Logout realizado com sucesso.',
+        ]);
+    }
+
+    public function updateMe(Request $request)
+    {
+        $user = $request->user();
+
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->ignore($user->id),
+            ],
+            'phone' => ['nullable', 'string', 'max:20'],
+            'document' => ['nullable', 'string', 'max:20'],
+            'password' => ['nullable', 'string', 'min:6', 'confirmed'],
+        ]);
+
+        $user->name = $data['name'];
+        $user->email = $data['email'];
+        $user->phone = $data['phone'] ?? null;
+        $user->document = $data['document'] ?? null;
+
+        if (!empty($data['password'])) {
+            $user->password = Hash::make($data['password']);
+        }
+
+        $user->save();
+
+        return response()->json([
+            'user' => $user,
         ]);
     }
 }

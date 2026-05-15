@@ -23,33 +23,47 @@ export function KanbanColumn({
     id: column.id,
   });
 
+  const groupsOfThree = Math.ceil(clients.length / 3);
+
+  const columnHeight =
+    clients.length <= 3
+      ? 290
+      : 290 + (groupsOfThree - 1) * 250;
+
   return (
     <div
       ref={setNodeRef}
+      style={{
+        minHeight: `${columnHeight}px`,
+      }}
       className={`
-        min-h-[620px] rounded-3xl border
-        bg-[linear-gradient(180deg,#132238_0%,#0f1b2d_100%)]
-        p-4 transition-all duration-300
+        w-full rounded-2xl border
+        bg-[linear-gradient(180deg,#18283d_0%,#111d2e_100%)]
+        p-3 transition-all duration-300
         ${
-          isOver
-            ? "border-cyan-400/60 shadow-[0_0_35px_rgba(34,211,238,.18)]"
+          isOver || column.highlight
+            ? "border-cyan-400/70 shadow-[0_0_35px_rgba(34,211,238,.25)]"
             : "border-white/10"
         }
       `}
     >
-      <div className="mb-4 flex items-start justify-between">
+      <div className="mb-3 flex items-start justify-between">
         <div>
-          <h3 className="text-[15px] font-bold tracking-tight text-white">
+          <h3 className="text-[15px] font-semibold leading-none text-white">
             {column.title}
           </h3>
 
-          <p className="mt-1 text-xs text-slate-400">
-            {clients.length} clientes
+          <p className="mt-2 text-xs text-slate-400">
+            {clients.length} {clients.length === 1 ? "cliente" : "clientes"}
           </p>
         </div>
+
+        <button className="rounded-lg px-1 text-slate-400 transition hover:bg-white/10 hover:text-white">
+          ⋮
+        </button>
       </div>
 
-      <div className="max-h-[540px] space-y-3 overflow-y-auto pr-1 no-scrollbar">
+      <div className="space-y-2.5 overflow-visible">
         {clients.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-white/10 p-4 text-center text-xs text-slate-500">
             Nenhum cliente nesta etapa.

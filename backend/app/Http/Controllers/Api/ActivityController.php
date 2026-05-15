@@ -38,6 +38,8 @@ class ActivityController extends Controller
                     'title' => $activity->title,
                     'description' => $activity->description,
                     'created_at' => $activity->created_at,
+                    'read_at' => $activity->read_at,
+                    'is_read' => !is_null($activity->read_at),
                 ])
         );
     }
@@ -66,6 +68,28 @@ class ActivityController extends Controller
         }
 
         return 'Cliente';
+    }
+
+    public function recent(Request $request)
+    {
+        $activities = Activity::with('user')
+            ->latest()
+            ->limit(10)
+            ->get()
+            ->map(fn($activity) => [
+                'id' => $activity->id,
+                'type' => $this->normalizeType($activity->type),
+                'clientName' => $this->extractClientName($activity),
+                'userName' => $activity->user?->name ?? 'Sistema',
+                'date' => optional($activity->created_at)->format('d/m/Y H:i'),
+                'title' => $activity->title,
+                'description' => $activity->description,
+                'created_at' => $activity->created_at,
+                'read_at' => $activity->read_at,
+                'is_read' => !is_null($activity->read_at),
+            ]);
+
+        return response()->json($activities);
     }
 
     public function store(Request $request)
@@ -102,6 +126,18 @@ class ActivityController extends Controller
 
         return response()->json([
             'message' => 'Atividade removida com sucesso.',
+        ]);
+    }
+
+    public function markAsRead(Activity $activity)
+    {
+        $activity->update([
+            'read_at' => now(),
+        ]);
+
+        return response()->json([
+            'message' => 'Atividade marcada como lida.',
+            'activity' => $activity,
         ]);
     }
 }

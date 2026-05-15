@@ -18,6 +18,11 @@ class Activity extends Model
         'type',
         'subject_id',
         'subject_type',
+        'read_at',
+    ];
+
+    protected $casts = [
+        'read_at' => 'datetime',
     ];
 
     protected static function booted(): void

@@ -1,3 +1,7 @@
+import { useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
+import { matchesSearch } from "../utils/search";
+
 import { ContractFormModal } from "../components/contratos/ContractFormModal";
 import { ContractListModal } from "../components/contratos/ContractListModal";
 import { ConfirmDeleteModal } from "../components/ui/ConfirmDeleteModal";
@@ -6,6 +10,15 @@ import { useContractsPage } from "../features/contratos/hooks/useContractsPage";
 
 export function Contracts() {
   const page = useContractsPage();
+  const [searchParams] = useSearchParams();
+
+  const search = searchParams.get("q") ?? "";
+
+  const filteredContracts = useMemo(() => {
+    return page.contracts.filter((contract) =>
+      matchesSearch(contract, search)
+    );
+  }, [page.contracts, search]);
 
   if (page.loading) {
     return (
@@ -48,10 +61,18 @@ export function Contracts() {
     );
   }
 
+  if (filteredContracts.length === 0) {
+    return (
+      <div className="rounded-2xl border border-white/10 bg-[#101c2d]/95 p-6 text-center text-slate-400">
+        Nenhum contrato encontrado para essa busca.
+      </div>
+    );
+  }
+
   return (
     <>
       <ContractMainPanel
-        contracts={page.contracts}
+        contracts={filteredContracts}
         selectedContractId={page.selectedContractId}
         selectedClauseId={page.selectedClauseId}
         selectedType={page.selectedType}
@@ -73,7 +94,7 @@ export function Contracts() {
 
       {page.showListModal && (
         <ContractListModal
-          contracts={page.contracts}
+          contracts={filteredContracts}
           selectedContractId={page.selectedContractId}
           onClose={() => page.setShowListModal(false)}
           onAdd={() => {

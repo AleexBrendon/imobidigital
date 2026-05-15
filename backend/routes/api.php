@@ -21,6 +21,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     //USER ROUTES
     Route::get('/me', [AuthController::class, 'me']);
+    Route::put('/me', [AuthController::class, 'updateMe']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::apiResource('users', UserController::class)->only([
         'index',
@@ -60,12 +61,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/signature-steps/{signatureStep}', [ContractController::class, 'updateSignatureStep']);
     Route::patch('/contract-clauses/{clause}', [ContractController::class, 'updateClauseStatus']);
     //ACTIVITIES ROUTES
+    Route::get('/activities/recent', [ActivityController::class, 'recent']);
     Route::apiResource('activities', ActivityController::class)->only([
         'index',
         'store',
         'show',
         'destroy',
     ]);
+    Route::patch('/activities/{activity}/read', [ActivityController::class, 'markAsRead']);
     //NOTIFICATIONS ROUTES
     Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
     Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markAsRead']);

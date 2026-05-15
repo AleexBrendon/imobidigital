@@ -1,5 +1,7 @@
 import { Plus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { matchesSearch } from "../utils/search";
 
 import {
   ClientActivityPanel,
@@ -47,6 +49,10 @@ function normalizeClient(client: any): ClientItem {
 }
 
 export function Clients() {
+
+  const [searchParams] = useSearchParams();
+
+  const search = searchParams.get("q") ?? "";
   const toast = useToast();
 
   const [clients, setClients] = useState<ClientItem[]>([]);
@@ -123,24 +129,28 @@ export function Clients() {
   }, [profileClientId, showForm]);
 
   const filteredClients = useMemo(() => {
+    let result = clients;
+
     if (filter === "comprador") {
-      return clients.filter((client) => client.type === "Comprador");
+      result = result.filter((client) => client.type === "Comprador");
     }
 
     if (filter === "locador") {
-      return clients.filter((client) => client.type === "Locador");
+      result = result.filter((client) => client.type === "Locador");
     }
 
     if (filter === "locatario") {
-      return clients.filter((client) => client.type === "Locatário");
+      result = result.filter((client) => client.type === "Locatário");
     }
 
     if (filter === "investidor") {
-      return clients.filter((client) => client.type === "Investidor");
+      result = result.filter((client) => client.type === "Investidor");
     }
 
-    return clients;
-  }, [clients, filter]);
+    result = result.filter((client) => matchesSearch(client, search));
+
+    return result;
+  }, [clients, filter, search]);
 
   const profileClient = useMemo(() => {
     return clients.find((client) => client.id === profileClientId) ?? null;
