@@ -9,6 +9,7 @@ import {
 import { UserFilters } from "../components/usuarios/UserFilters";
 import { UserFormPanel } from "../components/usuarios/UserFormPanel";
 import { UserTable } from "../components/usuarios/UserTable";
+import { EditUserModal } from "../components/usuarios/EditUserModal";
 
 import type { UserItem, UserRole } from "../types/user";
 
@@ -24,14 +25,14 @@ import {
 import { getActivities } from "../services/activities";
 import { useToast } from "../contexts/ToastContext";
 
-type Filter = "all" | "corretor" | "administrador";
+type Filter = "all" | "corretor" | "administrador" | "blocked";
 
 function toApiStatus(status: string): UserPayload["status"] {
-  return status === "Offline" ? "blocked" : "active";
+  return status === "Bloqueado" ? "blocked" : "active";
 }
 
 function fromApiStatus(status?: string) {
-  return status === "blocked" ? "Offline" : "Online";
+  return status === "blocked" ? "Bloqueado" : "Online";
 }
 
 function normalizeUser(user: ApiUser): UserItem {
@@ -104,12 +105,18 @@ export function Users() {
       return users.filter((user) => user.role === "Administrador");
     }
 
+    if (filter === "blocked") {
+      return users.filter((user) => user.status === "Bloqueado");
+    }
+
     return users;
   }, [filter, users]);
 
-  async function handleSaveUser(data: Omit<UserItem, "id" | "avatar"> & {
-    password?: string;
-  }) {
+  async function handleSaveUser(
+    data: Omit<UserItem, "id" | "avatar"> & {
+      password?: string;
+    }
+  ) {
     try {
       const payload: UserPayload = {
         name: data.name,
@@ -192,7 +199,6 @@ export function Users() {
   function handleOpenEditForm(user: UserItem) {
     setEditingUser(user);
     setSelectedUserId(user.id);
-    setShowForm(true);
   }
 
   function handleCloseForm() {
@@ -210,7 +216,10 @@ export function Users() {
             </h2>
 
             <div className="mt-4">
-              <UserFilters activeFilter={filter} onChange={setFilter} />
+              <UserFilters
+                activeFilter={filter}
+                onChange={setFilter}
+              />
             </div>
           </div>
 
@@ -243,14 +252,24 @@ export function Users() {
       <aside className="max-h-[calc(100vh-120px)] space-y-5 overflow-y-auto pr-2 no-scrollbar">
         <UserActivityPanel activities={activities} />
 
-        {showForm && (
+        {showForm && !editingUser && (
           <UserFormPanel
-            editingUser={editingUser}
+            editingUser={null}
             onSave={handleSaveUser}
             onCancelEdit={handleCloseForm}
           />
         )}
       </aside>
+
+      <EditUserModal
+        open={!!editingUser}
+        user={editingUser}
+        onClose={() => setEditingUser(null)}
+        onSave={async (user) => {
+          await handleSaveUser(user);
+          setEditingUser(null);
+        }}
+      />
     </div>
   );
 }
