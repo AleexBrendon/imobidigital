@@ -97,19 +97,51 @@ class ContractController extends Controller
             ]);
         }
 
-        foreach ($data['signature_steps'] ?? [] as $index => $step) {
+        $signatureSteps = $data['signature_steps'] ?? [
+            [
+                'label' => 'Contrato criado',
+                'completed' => true,
+            ],
+            [
+                'label' => 'Enviado para assinatura',
+                'completed' => false,
+            ],
+            [
+                'label' => 'Assinado pelo cliente',
+                'completed' => false,
+            ],
+            [
+                'label' => 'Assinado pela imobiliária',
+                'completed' => false,
+            ],
+            [
+                'label' => 'Contrato finalizado',
+                'completed' => false,
+            ],
+        ];
+
+        foreach ($signatureSteps as $index => $step) {
             $contract->signatureSteps()->create([
                 'company_id' => $companyId,
                 'label' => $step['label'],
                 'completed' => $step['completed'] ?? false,
-                'order' => $index,
+                'order' => $index + 1,
             ]);
         }
 
-        foreach ($data['signature_events'] ?? [] as $event) {
+        $signatureEvents = $data['signature_events'] ?? [
+            [
+                'time' => now()->format('H:i'),
+                'title' => 'Contrato criado',
+                'description' => 'Contrato iniciado no sistema.',
+                'completed' => true,
+            ],
+        ];
+
+        foreach ($signatureEvents as $event) {
             $contract->signatureEvents()->create([
                 'company_id' => $companyId,
-                'time' => $event['time'] ?? null,
+                'time' => $event['time'] ?? now()->format('H:i'),
                 'title' => $event['title'],
                 'description' => $event['description'] ?? null,
                 'completed' => $event['completed'] ?? false,
