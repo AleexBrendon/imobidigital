@@ -1,37 +1,53 @@
-// src/components/documentos/DocumentEditModal.tsx
-
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { DocumentItem } from "../../types/document";
 
+type ClientOption = {
+  id: number;
+  name: string;
+};
+
+type StatusOption = "validated" | "expiring";
+
 export function DocumentEditModal({
   document,
+  clients,
   onClose,
   onSubmit,
 }: {
   document: DocumentItem;
+  clients: ClientOption[];
   onClose: () => void;
   onSubmit: (data: {
     name: string;
+    status: StatusOption;
     client_id: number | null;
     validation_date: string;
     expiration_date: string;
   }) => Promise<void>;
 }) {
   const [name, setName] = useState(document.name);
+  const [status, setStatus] = useState<StatusOption>(
+    normalizeStatus(document.status)
+  );
+
   const [clientId, setClientId] = useState<string>(
     document.client_id ? String(document.client_id) : ""
   );
+
   const [validationDate, setValidationDate] = useState(
     document.validationDate ?? ""
   );
+
   const [expirationDate, setExpirationDate] = useState(
     document.expirationDate ?? ""
   );
+
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     setName(document.name);
+    setStatus(normalizeStatus(document.status));
     setClientId(document.client_id ? String(document.client_id) : "");
     setValidationDate(document.validationDate ?? "");
     setExpirationDate(document.expirationDate ?? "");
@@ -45,6 +61,7 @@ export function DocumentEditModal({
     try {
       await onSubmit({
         name,
+        status,
         client_id: clientId ? Number(clientId) : null,
         validation_date: validationDate,
         expiration_date: expirationDate,
@@ -86,13 +103,33 @@ export function DocumentEditModal({
             />
           </Field>
 
-          <Field label="ID do cliente">
-            <input
+          <Field label="Cliente">
+            <select
               value={clientId}
               onChange={(event) => setClientId(event.target.value)}
-              placeholder="Deixe vazio para sem cliente"
               className="h-11 w-full rounded-lg border border-white/10 bg-[#142438] px-3 text-sm text-white outline-none"
-            />
+            >
+              <option value="">Sem cliente vinculado</option>
+
+              {clients.map((client) => (
+                <option key={client.id} value={client.id}>
+                  {client.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+
+          <Field label="Status">
+            <select
+              value={status}
+              onChange={(event) =>
+                setStatus(event.target.value as StatusOption)
+              }
+              className="h-11 w-full rounded-lg border border-white/10 bg-[#142438] px-3 text-sm text-white outline-none"
+            >
+              <option value="validated">Validado</option>
+              <option value="expiring">Expirado</option>
+            </select>
           </Field>
 
           <Field label="Data de validação">
@@ -134,6 +171,14 @@ export function DocumentEditModal({
       </form>
     </div>
   );
+}
+
+function normalizeStatus(status: string): StatusOption {
+  if (status === "expiring") {
+    return "expiring";
+  }
+
+  return "validated";
 }
 
 function Field({

@@ -41,13 +41,15 @@ class DocumentController extends Controller
 
         $data = $request->validate([
             'client_id' => ['nullable', 'exists:clients,id'],
+            'name' => ['nullable', 'string'],
+            'type' => ['nullable', 'string'],
+            'status' => ['nullable', 'string'],
             'validation_date' => ['nullable', 'date'],
             'expiration_date' => ['nullable', 'date'],
             'file' => ['required', 'file', 'max:10240'],
         ]);
 
         $file = $request->file('file');
-
         $extension = strtolower($file->getClientOriginalExtension());
 
         $type = match ($extension) {
@@ -93,12 +95,12 @@ class DocumentController extends Controller
         $data = $request->validate([
             'client_id' => ['nullable', 'exists:clients,id'],
             'name' => ['sometimes', 'string'],
+            'status' => ['sometimes', 'string', 'in:validated,expiring'],
             'validation_date' => ['nullable', 'date'],
             'expiration_date' => ['nullable', 'date'],
         ]);
 
         $document->update($data);
-        $document->refreshStatus();
 
         return response()->json($document->load('client'));
     }

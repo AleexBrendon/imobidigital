@@ -2,13 +2,16 @@ import { Upload } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { matchesSearch } from "../utils/search";
+import { useToast } from "../contexts/ToastContext";
+import { getClients } from "../services/clients";
 import { DocumentCard } from "../components/documentos/DocumentCard";
 import { DocumentEditModal } from "../components/documentos/DocumentEditModal";
+import { DocumentAddModal } from "../components/documentos/DocumentAddModal";
+import { DocumentPreviewPanel } from "../components/documentos/DocumentPreviewPanel";
 import {
   DocumentFilters,
   type DocumentTypeFilter,
 } from "../components/documentos/DocumentFilters";
-import { DocumentPreviewPanel } from "../components/documentos/DocumentPreviewPanel";
 import {
   deleteDocument,
   getDocuments,
@@ -18,20 +21,23 @@ import {
 import type { DocumentItem } from "../types/document";
 
 export function Documents() {
+  useToast();
+
+  const [clientOptions, setClientOptions] = useState<
+    { id: number; name: string }[]
+  >([]);
+
   const [searchParams] = useSearchParams();
   const search = searchParams.get("q") ?? "";
 
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
-  const [selectedDocument, setSelectedDocument] = useState<DocumentItem | null>(
-    null
-  );
-  const [editingDocument, setEditingDocument] = useState<DocumentItem | null>(
-    null
-  );
+  const [selectedDocument, setSelectedDocument] = useState<DocumentItem | null>(null);
+  const [editingDocument, setEditingDocument] = useState<DocumentItem | null>(null);
+  const [addingDocument, setAddingDocument] = useState(false);
+
   const [typeFilter, setTypeFilter] = useState<DocumentTypeFilter>("Todos");
   const [clientFilter, setClientFilter] = useState("Todos");
   const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
 
   async function loadDocuments() {
     setLoading(true);
@@ -46,11 +52,7 @@ export function Documents() {
       setSelectedDocument((current) => {
         if (!current) return data[0] ?? null;
 
-        return (
-          data.find((document: { id: number; }) => document.id === current.id) ??
-          data[0] ??
-          null
-        );
+        return data.find((document: DocumentItem) => document.id === current.id) ?? data[0] ?? null;
       });
     } finally {
       setLoading(false);
@@ -59,10 +61,17 @@ export function Documents() {
 
   useEffect(() => {
     loadDocuments();
+    loadClients();
   }, [typeFilter]);
 
   const clients = useMemo(() => {
-    return Array.from(new Set(documents.map((document) => document.client)));
+    return Array.from(
+      new Set(
+        documents
+          .map((document) => document.client)
+          .filter(Boolean)
+      )
+    );
   }, [documents]);
 
   const filteredDocuments = useMemo(() => {
@@ -76,20 +85,38 @@ export function Documents() {
     });
   }, [documents, clientFilter, search]);
 
-  async function handleUpload(file: File) {
-    setUploading(true);
+  async function handleCreateDocument(data: {
+    name: string;
+    type: string;
+    status: string;
+    client_id: number | null;
+    validation_date: string;
+    expiration_date: string;
+    file: File;
+  }) {
+    const formData = new FormData();
 
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
+    formData.append("file", data.file);
+    formData.append("name", data.name);
+    formData.append("type", data.type);
+    formData.append("status", data.status);
 
-      const newDocument = await uploadDocument(formData);
-
-      setDocuments((prev) => [newDocument, ...prev]);
-      setSelectedDocument(newDocument);
-    } finally {
-      setUploading(false);
+    if (data.client_id) {
+      formData.append("client_id", String(data.client_id));
     }
+
+    if (data.validation_date) {
+      formData.append("validation_date", data.validation_date);
+    }
+
+    if (data.expiration_date) {
+      formData.append("expiration_date", data.expiration_date);
+    }
+
+    const newDocument = await uploadDocument(formData);
+
+    setDocuments((prev) => [newDocument, ...prev]);
+    setSelectedDocument(newDocument);
   }
 
   async function handleDelete(id: number) {
@@ -108,6 +135,7 @@ export function Documents() {
 
   async function handleUpdateDocument(data: {
     name: string;
+    status: string;
     client_id: number | null;
     validation_date: string;
     expiration_date: string;
@@ -123,6 +151,18 @@ export function Documents() {
     );
 
     setSelectedDocument(updatedDocument);
+    setEditingDocument(null);
+  }
+
+  async function loadClients() {
+    const data = await getClients();
+
+    setClientOptions(
+      data.map((client: any) => ({
+        id: client.id,
+        name: client.name,
+      }))
+    );
   }
 
   return (
@@ -133,28 +173,14 @@ export function Documents() {
             Repositório Central de Documentos
           </h2>
 
-          <div className="flex items-center gap-3">
-            <label className="flex h-10 cursor-pointer items-center gap-2 rounded-lg bg-cyan-500 px-4 text-sm font-semibold text-slate-950 hover:bg-cyan-400">
-              <Upload size={17} />
-              {uploading ? "Enviando..." : "Enviar documento"}
-
-              <input
-                type="file"
-                className="hidden"
-                disabled={uploading}
-                accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp"
-                onChange={(event) => {
-                  const file = event.target.files?.[0];
-
-                  if (file) {
-                    handleUpload(file);
-                  }
-
-                  event.target.value = "";
-                }}
-              />
-            </label>
-          </div>
+          <button
+            type="button"
+            onClick={() => setAddingDocument(true)}
+            className="flex h-10 items-center gap-2 rounded-lg bg-cyan-500 px-4 text-sm font-semibold text-slate-950 hover:bg-cyan-400"
+          >
+            <Upload size={17} />
+            Adicionar documento
+          </button>
         </div>
 
         <DocumentFilters
@@ -196,9 +222,18 @@ export function Documents() {
         />
       )}
 
+      {addingDocument && (
+        <DocumentAddModal
+          clients={clientOptions}
+          onClose={() => setAddingDocument(false)}
+          onSubmit={handleCreateDocument}
+        />
+      )}
+
       {editingDocument && (
         <DocumentEditModal
           document={editingDocument}
+          clients={clientOptions}
           onClose={() => setEditingDocument(null)}
           onSubmit={handleUpdateDocument}
         />

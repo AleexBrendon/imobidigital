@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { matchesSearch } from "../utils/search";
-
+import { useToast } from "../contexts/ToastContext";
 import { ContractFormModal } from "../components/contratos/ContractFormModal";
 import { ContractListModal } from "../components/contratos/ContractListModal";
 import { ConfirmDeleteModal } from "../components/ui/ConfirmDeleteModal";
@@ -29,6 +29,7 @@ export function Contracts() {
   }
 
   if (page.contracts.length === 0) {
+    useToast();
     return (
       <>
         <div className="rounded-2xl border border-white/10 bg-[#101c2d]/95 p-6 text-center text-slate-400">
