@@ -16,9 +16,10 @@ class StoreClientRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:30'],
-            'type' => ['required', 'string', 'max:100'],
-            'status' => ['required', 'string', 'max:100'],
+            'phone' => ['nullable', 'string', 'max:20'],
+            'type' => ['required', 'string', 'max:50'],
+            'status' => ['required', 'string', 'max:50'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ];
     }
 }

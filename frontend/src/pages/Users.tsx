@@ -24,6 +24,7 @@ import {
 
 import { getActivities } from "../services/activities";
 import { useToast } from "../contexts/ToastContext";
+import { ConfirmDeleteModal } from "../components/ui/ConfirmDeleteModal";
 
 type Filter = "all" | "corretor" | "administrador" | "blocked";
 
@@ -62,6 +63,9 @@ function toApiRole(role: UserRole): UserPayload["role"] {
 
 export function Users() {
   const toast = useToast();
+
+  const [userToDelete, setUserToDelete] = useState<UserItem | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const [users, setUsers] = useState<UserItem[]>([]);
   const [activities, setActivities] = useState<UserActivity[]>([]);
@@ -158,35 +162,40 @@ export function Users() {
     }
   }
 
-  async function handleDeleteUser(id: number) {
-    const user = users.find((user) => user.id === id);
+  function handleDeleteUser(id: number) {
+    const user = users.find((user) => user.id === id) ?? null;
+    setUserToDelete(user);
+  }
 
-    const confirmDelete = confirm("Deseja excluir este usuário?");
-
-    if (!confirmDelete) return;
+  async function confirmDeleteUser() {
+    if (!userToDelete) return;
 
     try {
-      await deleteUser(id);
+      setDeleting(true);
 
-      toast.info(
-        user
-          ? `Usuário ${user.name} foi excluído.`
-          : "Usuário excluído com sucesso."
+      await deleteUser(userToDelete.id);
+
+      setUsers((prev) =>
+        prev.filter((user) => user.id !== userToDelete.id)
       );
 
-      if (selectedUserId === id) {
+      toast.info(`Usuário ${userToDelete.name} foi excluído com sucesso.`);
+
+      if (selectedUserId === userToDelete.id) {
         setSelectedUserId(null);
       }
 
-      if (editingUser?.id === id) {
+      if (editingUser?.id === userToDelete.id) {
         setEditingUser(null);
         setShowForm(false);
       }
 
-      await loadUsers();
+      setUserToDelete(null);
     } catch (error) {
       console.error(error);
       toast.error("Erro ao excluir usuário.");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -269,6 +278,16 @@ export function Users() {
           await handleSaveUser(user);
           setEditingUser(null);
         }}
+      />
+
+      <ConfirmDeleteModal
+        open={!!userToDelete}
+        itemName={userToDelete?.name}
+        title="Excluir usuário"
+        description="Tem certeza que deseja excluir este usuário? Essa ação não poderá ser desfeita."
+        loading={deleting}
+        onClose={() => setUserToDelete(null)}
+        onConfirm={confirmDeleteUser}
       />
     </div>
   );

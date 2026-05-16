@@ -7,7 +7,9 @@ export type ClientItem = {
   name: string;
   email: string;
   phone: string;
-  type: ClientType;
-  status: ClientStatus;
-  avatar: number;
+  type: string;
+  status: string;
+  avatar?: number;
+  image?: string | null;
+  image_url?: string | null;
 };

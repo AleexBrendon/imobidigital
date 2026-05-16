@@ -17,6 +17,7 @@ class Client extends Model
         'phone',
         'type',
         'status',
+        'image',
     ];
 
     public function company()

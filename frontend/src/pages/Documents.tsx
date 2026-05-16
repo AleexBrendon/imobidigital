@@ -19,9 +19,14 @@ import {
   uploadDocument,
 } from "../services/documents";
 import type { DocumentItem } from "../types/document";
+import { ConfirmDeleteModal } from "../components/ui/ConfirmDeleteModal";
 
 export function Documents() {
   useToast();
+  const toast = useToast();
+
+  const [documentToDelete, setDocumentToDelete] = useState<DocumentItem | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const [clientOptions, setClientOptions] = useState<
     { id: number; name: string }[]
@@ -119,18 +124,37 @@ export function Documents() {
     setSelectedDocument(newDocument);
   }
 
-  async function handleDelete(id: number) {
-    const confirmed = confirm("Deseja remover este documento?");
+  function handleDelete(document: DocumentItem) {
+    setDocumentToDelete(document);
+  }
 
-    if (!confirmed) return;
+  async function confirmDeleteDocument() {
+    if (!documentToDelete) return;
 
-    await deleteDocument(id);
+    try {
+      setDeleting(true);
 
-    setDocuments((prev) => {
-      const updated = prev.filter((document) => document.id !== id);
-      setSelectedDocument(updated[0] ?? null);
-      return updated;
-    });
+      await deleteDocument(documentToDelete.id);
+
+      setDocuments((prev) => {
+        const updated = prev.filter(
+          (document) => document.id !== documentToDelete.id
+        );
+
+        setSelectedDocument(updated[0] ?? null);
+
+        return updated;
+      });
+
+      toast.info(`Documento ${documentToDelete.name} foi excluído com sucesso.`);
+
+      setDocumentToDelete(null);
+    } catch (error) {
+      console.error(error);
+      toast.error("Erro ao excluir documento.");
+    } finally {
+      setDeleting(false);
+    }
   }
 
   async function handleUpdateDocument(data: {
@@ -217,7 +241,7 @@ export function Documents() {
         <DocumentPreviewPanel
           document={selectedDocument}
           onClose={() => setSelectedDocument(null)}
-          onDelete={() => handleDelete(selectedDocument.id)}
+          onDelete={() => handleDelete(selectedDocument)}
           onEdit={() => setEditingDocument(selectedDocument)}
         />
       )}
@@ -238,6 +262,16 @@ export function Documents() {
           onSubmit={handleUpdateDocument}
         />
       )}
+
+      <ConfirmDeleteModal
+        open={!!documentToDelete}
+        itemName={documentToDelete?.name}
+        title="Excluir documento"
+        description="Tem certeza que deseja excluir este documento? Essa ação não poderá ser desfeita."
+        loading={deleting}
+        onClose={() => setDocumentToDelete(null)}
+        onConfirm={confirmDeleteDocument}
+      />
     </div>
   );
 }

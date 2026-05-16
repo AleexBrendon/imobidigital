@@ -16,6 +16,8 @@ class ClientResource extends JsonResource
             'phone' => $this->phone,
             'type' => $this->type,
             'status' => $this->status,
+            'image' => $this->image,
+            'image_url' => $this->image ? asset('storage/' . $this->image) : null,
             'created_at' => $this->created_at,
         ];
     }

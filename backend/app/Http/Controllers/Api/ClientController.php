@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreClientRequest;
 use App\Http\Requests\UpdateClientRequest;
 use App\Http\Resources\ClientResource;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class ClientController extends Controller
@@ -27,9 +28,12 @@ class ClientController extends Controller
 
     public function store(StoreClientRequest $request)
     {
-
         $data = $request->validated();
         $data['company_id'] = $request->user()->company_id;
+
+        if ($request->hasFile('image')) {
+            $data['image'] = $request->file('image')->store('clients', 'public');
+        }
 
         $client = Client::create($data);
 
@@ -59,7 +63,17 @@ class ClientController extends Controller
     {
         $this->authorize('update', $client);
 
-        $client->update($request->validated());
+        $data = $request->validated();
+
+        if ($request->hasFile('image')) {
+            if ($client->image) {
+                Storage::disk('public')->delete($client->image);
+            }
+
+            $data['image'] = $request->file('image')->store('clients', 'public');
+        }
+
+        $client->update($data);
 
         Activity::create([
             'company_id' => auth()->user()->company_id,
@@ -87,6 +101,10 @@ class ClientController extends Controller
             'subject_type' => Client::class,
             'subject_id' => $client->id,
         ]);
+
+        if ($client->image) {
+            Storage::disk('public')->delete($client->image);
+        }
 
         $client->delete();
 

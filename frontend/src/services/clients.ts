@@ -1,37 +1,61 @@
 import { api } from "./api";
 
-export type ApiClient = {
-  id: number;
-  name: string;
-  email: string | null;
-  phone: string | null;
-  type: "Comprador" | "Locador" | "Locatário" | "Investidor";
-  status: "Ativo" | "Inativo" | "Lead";
-};
-
 export type ClientPayload = {
   name: string;
   email?: string;
   phone?: string;
   type: string;
   status: string;
+  image?: File | null;
 };
+
+function toFormData(payload: ClientPayload) {
+  const formData = new FormData();
+
+  formData.append("name", payload.name);
+  formData.append("email", payload.email ?? "");
+  formData.append("phone", payload.phone ?? "");
+  formData.append("type", payload.type);
+  formData.append("status", payload.status);
+
+  if (payload.image) {
+    formData.append("image", payload.image);
+  }
+
+  return formData;
+}
 
 export async function getClients() {
   const { data } = await api.get("/clients");
-  return data.data as ApiClient[];
+
+  return data.data ?? data;
 }
 
 export async function createClient(payload: ClientPayload) {
-  const { data } = await api.post("/clients", payload);
-  return data.data as ApiClient;
+  const { data } = await api.post("/clients", toFormData(payload), {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+  return data.data ?? data;
 }
 
 export async function updateClient(id: number, payload: ClientPayload) {
-  const { data } = await api.put(`/clients/${id}`, payload);
-  return data.data as ApiClient;
+  const formData = toFormData(payload);
+  formData.append("_method", "PUT");
+
+  const { data } = await api.post(`/clients/${id}`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+  return data.data ?? data;
 }
 
 export async function deleteClient(id: number) {
-  await api.delete(`/clients/${id}`);
+  const { data } = await api.delete(`/clients/${id}`);
+
+  return data;
 }

@@ -33,6 +33,7 @@ import {
 } from "../services/clientProfile";
 
 import { useToast } from "../contexts/ToastContext";
+import { ConfirmDeleteModal } from "../components/ui/ConfirmDeleteModal";
 
 type Filter = "all" | "comprador" | "locador" | "locatario" | "investidor";
 
@@ -45,10 +46,15 @@ function normalizeClient(client: any): ClientItem {
     type: client.type,
     status: client.status,
     avatar: client.avatar ?? Math.floor(Math.random() * 50) + 1,
+    image: client.image ?? null,
+    image_url: client.image_url ?? null,
   };
 }
 
 export function Clients() {
+
+  const [clientToDelete, setClientToDelete] = useState<ClientItem | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const [searchParams] = useSearchParams();
 
@@ -156,7 +162,14 @@ export function Clients() {
     return clients.find((client) => client.id === profileClientId) ?? null;
   }, [clients, profileClientId]);
 
-  async function saveClient(data: Omit<ClientItem, "id" | "avatar">) {
+  async function saveClient(data: {
+    name: string;
+    email: string;
+    phone: string;
+    type: string;
+    status: string;
+    image: File | null;
+  }) {
     try {
       const payload: ClientPayload = {
         name: data.name,
@@ -164,70 +177,79 @@ export function Clients() {
         phone: data.phone,
         type: data.type,
         status: data.status,
+        image: data.image,
       };
 
       if (editingClient) {
-        await updateClient(editingClient.id, payload);
+        const updated = await updateClient(editingClient.id, payload);
+        const normalized = normalizeClient(updated);
 
-        toast.success(`Cliente ${data.name} atualizado com sucesso.`);
+        setClients((prev) =>
+          prev.map((client) =>
+            client.id === normalized.id ? normalized : client
+          )
+        );
+
+        toast.success(`Cliente ${normalized.name} atualizado com sucesso.`);
 
         setEditingClient(null);
         setShowForm(false);
-        setProfileClientId(null);
-
-        await loadClients();
         return;
       }
 
       const created = await createClient(payload);
       const normalized = normalizeClient(created);
 
+      setClients((prev) => [normalized, ...prev]);
+
       toast.success(`Cliente ${normalized.name} cadastrado com sucesso.`);
 
       setSelectedClientId(normalized.id);
       setShowForm(false);
-      setProfileClientId(null);
-
-      await loadClients();
     } catch (error) {
       console.error(error);
       toast.error("Erro ao salvar cliente.");
     }
   }
 
-  async function handleDeleteClient(id: number) {
-    const client = clients.find((client) => client.id === id);
+  function handleDeleteClient(id: number) {
+    const client = clients.find((client) => client.id === id) ?? null;
+    setClientToDelete(client);
+  }
 
-    const confirmDelete = confirm("Deseja excluir este cliente?");
-
-    if (!confirmDelete) return;
+  async function confirmDeleteClient() {
+    if (!clientToDelete) return;
 
     try {
-      await deleteClient(id);
+      setDeleting(true);
 
-      toast.info(
-        client
-          ? `Cliente ${client.name} foi excluído.`
-          : "Cliente excluído com sucesso."
+      await deleteClient(clientToDelete.id);
+
+      setClients((prev) =>
+        prev.filter((client) => client.id !== clientToDelete.id)
       );
 
-      if (selectedClientId === id) {
+      toast.info(`Cliente ${clientToDelete.name} foi excluído com sucesso.`);
+
+      if (selectedClientId === clientToDelete.id) {
         setSelectedClientId(null);
       }
 
-      if (profileClientId === id) {
+      if (profileClientId === clientToDelete.id) {
         setProfileClientId(null);
       }
 
-      if (editingClient?.id === id) {
+      if (editingClient?.id === clientToDelete.id) {
         setEditingClient(null);
         setShowForm(false);
       }
 
-      await loadClients();
+      setClientToDelete(null);
     } catch (error) {
       console.error(error);
       toast.error("Erro ao excluir cliente.");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -306,9 +328,10 @@ export function Clients() {
 
         {showForm && (
           <ClientFormPanel
+            open={showForm}
             editingClient={editingClient}
             onSave={saveClient}
-            onCancel={closeForm}
+            onClose={closeForm}
           />
         )}
       </aside>
@@ -322,6 +345,16 @@ export function Clients() {
         contracts={clientContracts}
         properties={clientProperties}
         onClose={closeProfileModal}
+      />
+
+      <ConfirmDeleteModal
+        open={!!clientToDelete}
+        itemName={clientToDelete?.name}
+        title="Excluir cliente"
+        description="Tem certeza que deseja excluir este cliente? Essa ação não poderá ser desfeita."
+        loading={deleting}
+        onClose={() => setClientToDelete(null)}
+        onConfirm={confirmDeleteClient}
       />
     </div>
   );

@@ -43,11 +43,19 @@ export function ClientProfileModal({
           <header className="border-b border-white/10 p-6">
             <div className="flex gap-6">
               <div className="h-36 w-36 overflow-hidden rounded-2xl border border-cyan-400/60 shadow-[0_0_30px_rgba(34,211,238,.35)]">
-                <img
-                  src={`https://i.pravatar.cc/220?img=${client.avatar}`}
-                  alt={client.name}
-                  className="h-full w-full object-cover"
-                />
+                <div className="flex h-36 w-36 items-center justify-center overflow-hidden rounded-2xl border border-cyan-400/60 bg-gradient-to-br from-indigo-500/20 to-cyan-500/20 shadow-[0_0_30px_rgba(34,211,238,.35)]">
+                  {client.image_url ? (
+                    <img
+                      src={client.image_url}
+                      alt={client.name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-5xl font-bold uppercase text-cyan-200">
+                      {client.name?.charAt(0)}
+                    </span>
+                  )}
+                </div>
               </div>
 
               <div className="flex-1">
