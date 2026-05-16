@@ -28,4 +28,14 @@ class Client extends Model
     {
         static::addGlobalScope(new CompanyScope);
     }
+
+    public function contracts()
+    {
+        return $this->hasMany(Contract::class);
+    }
+
+    public function documents()
+    {
+        return $this->hasMany(Document::class);
+    }
 }

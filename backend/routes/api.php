@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\BotController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -82,4 +83,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/reports', [ReportController::class, 'index']);
     //DASHBOARD ROUTES
     Route::get('/dashboard', [DashboardController::class, 'index']);
+});
+//BOT ROUTES
+Route::prefix('public-bot')->group(function () {
+    Route::post('/start', [BotController::class, 'start']);
+    Route::post('/message', [BotController::class, 'message']);
+    Route::post('/document', [BotController::class, 'uploadDocument']);
 });

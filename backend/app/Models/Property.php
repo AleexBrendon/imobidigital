@@ -48,4 +48,9 @@ class Property extends Model
     {
         return $this->hasMany(PropertyVisit::class);
     }
+
+    public function contracts()
+    {
+        return $this->hasMany(Contract::class);
+    }
 }
