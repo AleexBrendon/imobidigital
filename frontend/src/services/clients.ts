@@ -1,6 +1,7 @@
 import { api } from "./api";
 
 export type ClientPayload = {
+  document: string;
   name: string;
   email?: string;
   phone?: string;
@@ -15,6 +16,7 @@ function toFormData(payload: ClientPayload) {
   formData.append("name", payload.name);
   formData.append("email", payload.email ?? "");
   formData.append("phone", payload.phone ?? "");
+  formData.append("document", payload.document ?? "");
   formData.append("type", payload.type);
   formData.append("status", payload.status);
 

@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\PublicBotNotificationController;
 use App\Http\Controllers\BotController;
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -83,6 +84,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/reports', [ReportController::class, 'index']);
     //DASHBOARD ROUTES
     Route::get('/dashboard', [DashboardController::class, 'index']);
+    //BOT NOTIFICATIONS ROUTES
+    Route::get('/public-bot-notifications', [PublicBotNotificationController::class, 'index']);
+    Route::patch('/public-bot-notifications/{notification}/read', [PublicBotNotificationController::class, 'markAsRead']);
 });
 //BOT ROUTES
 Route::prefix('public-bot')->group(function () {

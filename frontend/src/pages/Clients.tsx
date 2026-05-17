@@ -45,6 +45,7 @@ function normalizeClient(client: any): ClientItem {
     phone: client.phone ?? "",
     type: client.type,
     status: client.status,
+    document: client.document ?? "",
     avatar: client.avatar ?? Math.floor(Math.random() * 50) + 1,
     image: client.image ?? null,
     image_url: client.image_url ?? null,
@@ -166,6 +167,7 @@ export function Clients() {
     name: string;
     email: string;
     phone: string;
+    document: string;
     type: string;
     status: string;
     image: File | null;
@@ -175,6 +177,7 @@ export function Clients() {
         name: data.name,
         email: data.email,
         phone: data.phone,
+        document: data.document,
         type: data.type,
         status: data.status,
         image: data.image,

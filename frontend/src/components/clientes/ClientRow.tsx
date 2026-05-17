@@ -1,5 +1,6 @@
 import { Edit3, Trash2 } from "lucide-react";
 import type { ClientItem } from "../../types/client";
+import { formatCpfCnpj, formatPhone } from "../../utils/format";
 
 export function ClientRow({
   client,
@@ -16,10 +17,18 @@ export function ClientRow({
 }) {
   const initial = client.name?.charAt(0)?.toUpperCase() || "?";
 
+  const formattedPhone = client.phone
+    ? formatPhone(client.phone)
+    : "Não informado";
+
+  const formattedDocument = client.document
+    ? formatCpfCnpj(client.document)
+    : "Documento não informado";
+
   return (
     <div
       onClick={onSelect}
-      className={`grid cursor-pointer grid-cols-[42px_1.5fr_1.3fr_1.2fr_.8fr_.7fr_.45fr] items-center rounded-lg px-3 py-2.5 text-sm ${
+      className={`grid cursor-pointer grid-cols-[42px_1.5fr_1.3fr_1.2fr_1.1fr_.8fr_.7fr_.45fr] items-center rounded-lg px-3 py-2.5 text-sm ${
         active
           ? "border border-cyan-400 bg-cyan-400/10"
           : "hover:bg-white/5"
@@ -36,9 +45,7 @@ export function ClientRow({
               className="h-full w-full object-cover"
             />
           ) : (
-            <span className="text-sm font-bold text-cyan-200">
-              {initial}
-            </span>
+            <span className="text-sm font-bold text-cyan-200">{initial}</span>
           )}
         </div>
 
@@ -49,9 +56,9 @@ export function ClientRow({
         {client.email || "E-mail não informado"}
       </p>
 
-      <p className="truncate text-xs text-slate-400">
-        {client.phone || "Não informado"}
-      </p>
+      <p className="truncate text-xs text-slate-400">{formattedPhone}</p>
+
+      <p className="truncate text-xs text-slate-400">{formattedDocument}</p>
 
       <p className="truncate text-xs text-slate-400">{client.type}</p>
 

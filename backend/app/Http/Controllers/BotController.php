@@ -8,6 +8,7 @@ use App\Models\Document;
 use App\Models\Property;
 use App\Models\BotMessage;
 use App\Models\BotConversation;
+use App\Models\PublicBotNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -151,6 +152,21 @@ class BotController extends Controller
             'company_id' => $client->company_id,
             'current_step' => 'menu',
             'payload' => [],
+        ]);
+
+        PublicBotNotification::create([
+            'company_id' => $client->company_id,
+            'client_id' => $client->id,
+            'conversation_id' => $conversation->id,
+            'category' => 'cadastro',
+            'title' => 'Novo cadastro pelo bot',
+            'message' => "{$client->name} realizou um cadastro pelo atendimento público.",
+            'data' => [
+                'name' => $client->name,
+                'phone' => $client->phone,
+                'document' => $client->document,
+            ],
+            'read' => false,
         ]);
 
         return $this->botReply(

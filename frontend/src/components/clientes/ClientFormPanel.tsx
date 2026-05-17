@@ -1,12 +1,13 @@
 import { Camera, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { ClientItem } from "../../types/client";
-import { formatPhone } from "../../utils/format.ts";
+import { formatCpfCnpj, formatPhone } from "../../utils/format";
 
 type FormDataState = {
   name: string;
   email: string;
   phone: string;
+  document: string;
   type: string;
   status: string;
   image: File | null;
@@ -27,6 +28,7 @@ export function ClientFormPanel({
     name: "",
     email: "",
     phone: "",
+    document: "",
     type: "Comprador",
     status: "Ativo",
     image: null,
@@ -42,6 +44,7 @@ export function ClientFormPanel({
       name: editingClient?.name ?? "",
       email: editingClient?.email ?? "",
       phone: editingClient?.phone ?? "",
+      document: editingClient?.document ?? "",
       type: editingClient?.type ?? "Comprador",
       status: editingClient?.status ?? "Ativo",
       image: null,
@@ -155,6 +158,18 @@ export function ClientFormPanel({
             className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-indigo-400"
           />
 
+          <input
+            value={form.document}
+            onChange={(e) =>
+              setForm((prev) => ({
+                ...prev,
+                document: formatCpfCnpj(e.target.value),
+              }))
+            }
+            placeholder="CPF ou CNPJ"
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-indigo-400"
+          />
+
           <div className="grid grid-cols-2 gap-3">
             <select
               value={form.type}
@@ -196,7 +211,11 @@ export function ClientFormPanel({
               disabled={saving}
               className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {saving ? "Salvando..." : editingClient ? "Salvar Alterações" : "Cadastrar Cliente"}
+              {saving
+                ? "Salvando..."
+                : editingClient
+                  ? "Salvar Alterações"
+                  : "Cadastrar Cliente"}
             </button>
           </div>
         </form>

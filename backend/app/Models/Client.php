@@ -15,6 +15,7 @@ class Client extends Model
         'name',
         'email',
         'phone',
+        'document',
         'type',
         'status',
         'image',
