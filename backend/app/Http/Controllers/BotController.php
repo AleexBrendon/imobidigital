@@ -10,7 +10,6 @@ use App\Models\BotMessage;
 use App\Models\BotConversation;
 use App\Models\PublicBotNotification;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class BotController extends Controller
 {
@@ -31,7 +30,7 @@ class BotController extends Controller
 
         return $this->botReply(
             $conversation,
-            "Olá! Você está falando com {$company->name}. Informe seu CPF para iniciar o atendimento."
+            "Olá! Você está falando com {$company->name}. Informe seu CPF ou CNPJ para iniciar o atendimento."
         );
     }
 
@@ -46,8 +45,7 @@ class BotController extends Controller
         $company = Company::where('name', $request->company_name)->firstOrFail();
 
         $conversation = $request->conversation_id
-            ? BotConversation::where('company_id', $company->id)
-            ->findOrFail($request->conversation_id)
+            ? BotConversation::where('company_id', $company->id)->findOrFail($request->conversation_id)
             : BotConversation::create([
                 'company_id' => $company->id,
                 'status' => 'open',
@@ -66,6 +64,7 @@ class BotController extends Controller
         return match ($conversation->current_step) {
             'ask_document' => $this->handleDocument($conversation, $message),
             'client_name' => $this->handleClientName($conversation, $message),
+            'client_email' => $this->handleClientEmail($conversation, $message),
             'client_phone' => $this->handleClientPhone($conversation, $message),
             'menu' => $this->handleMenu($conversation, $message),
             'document_type' => $this->handleDocumentType($conversation, $message),
@@ -75,17 +74,26 @@ class BotController extends Controller
 
     private function handleDocument(BotConversation $conversation, string $message)
     {
-        $document = preg_replace('/\D/', '', $message);
+        $documentNumbers = preg_replace('/\D/', '', $message);
 
-        if (strlen($document) !== 11) {
+        if (!in_array(strlen($documentNumbers), [11, 14])) {
             return $this->botReply(
                 $conversation,
-                'CPF inválido. Informe um CPF com 11 números.'
+                'Documento inválido. Informe um CPF com 11 números ou CNPJ com 14 números.'
             );
         }
 
+        $document = $this->formatCpfCnpj($documentNumbers);
+
         $client = Client::where('company_id', $conversation->company_id)
-            ->where('document', $document)
+            ->where(function ($query) use ($document, $documentNumbers) {
+                $query
+                    ->where('document', $document)
+                    ->orWhere('document', $documentNumbers)
+                    ->orWhereRaw("REPLACE(REPLACE(REPLACE(REPLACE(document, '.', ''), '-', ''), '/', ''), ' ', '') = ?", [
+                        $documentNumbers,
+                    ]);
+            })
             ->first();
 
         if (!$client) {
@@ -120,8 +128,40 @@ class BotController extends Controller
 
     private function handleClientName(BotConversation $conversation, string $message)
     {
+        if (strlen($message) < 3) {
+            return $this->botReply(
+                $conversation,
+                'Nome inválido. Informe seu nome completo.'
+            );
+        }
+
         $payload = $conversation->payload ?? [];
-        $payload['name'] = $message;
+        $payload['name'] = trim($message);
+
+        $conversation->update([
+            'current_step' => 'client_email',
+            'payload' => $payload,
+        ]);
+
+        return $this->botReply(
+            $conversation,
+            'Perfeito. Agora informe seu e-mail.'
+        );
+    }
+
+    private function handleClientEmail(BotConversation $conversation, string $message)
+    {
+        $email = trim($message);
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return $this->botReply(
+                $conversation,
+                'E-mail inválido. Informe um e-mail válido.'
+            );
+        }
+
+        $payload = $conversation->payload ?? [];
+        $payload['email'] = $email;
 
         $conversation->update([
             'current_step' => 'client_phone',
@@ -130,21 +170,31 @@ class BotController extends Controller
 
         return $this->botReply(
             $conversation,
-            'Perfeito. Agora informe seu telefone.'
+            'Ótimo. Agora informe seu telefone com DDD. Exemplo: (11) 99999-9999.'
         );
     }
 
     private function handleClientPhone(BotConversation $conversation, string $message)
     {
+        $phoneNumbers = preg_replace('/\D/', '', $message);
+
+        if (strlen($phoneNumbers) !== 11) {
+            return $this->botReply(
+                $conversation,
+                'Telefone inválido. Informe no formato (xx) xxxxx-xxxx.'
+            );
+        }
+
         $payload = $conversation->payload ?? [];
-        $payload['phone'] = $message;
+        $payload['phone'] = $this->formatPhone($phoneNumbers);
 
         $client = Client::create([
             'company_id' => $conversation->company_id,
             'name' => $payload['name'],
+            'email' => $payload['email'],
             'document' => $payload['document'],
             'phone' => $payload['phone'],
-            'status' => 'Novo lead',
+            'status' => 'Ativo',
         ]);
 
         $conversation->update([
@@ -163,8 +213,10 @@ class BotController extends Controller
             'message' => "{$client->name} realizou um cadastro pelo atendimento público.",
             'data' => [
                 'name' => $client->name,
+                'email' => $client->email,
                 'phone' => $client->phone,
                 'document' => $client->document,
+                'status' => $client->status,
             ],
             'read' => false,
         ]);
@@ -320,6 +372,32 @@ class BotController extends Controller
         ];
     }
 
+    private function formatPhone(string $phone): string
+    {
+        return preg_replace(
+            '/^(\d{2})(\d{5})(\d{4})$/',
+            '($1) $2-$3',
+            $phone
+        );
+    }
+
+    private function formatCpfCnpj(string $document): string
+    {
+        if (strlen($document) === 11) {
+            return preg_replace(
+                '/^(\d{3})(\d{3})(\d{3})(\d{2})$/',
+                '$1.$2.$3-$4',
+                $document
+            );
+        }
+
+        return preg_replace(
+            '/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/',
+            '$1.$2.$3/$4-$5',
+            $document
+        );
+    }
+
     private function botReply(BotConversation $conversation, string $message, array $metadata = [])
     {
         BotMessage::create([
@@ -331,6 +409,7 @@ class BotController extends Controller
 
         return response()->json([
             'conversation_id' => $conversation->id,
+            'current_step' => $conversation->current_step,
             'message' => $message,
             'metadata' => $metadata,
         ]);

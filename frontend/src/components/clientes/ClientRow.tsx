@@ -28,14 +28,12 @@ export function ClientRow({
   return (
     <div
       onClick={onSelect}
-      className={`grid cursor-pointer grid-cols-[42px_1.5fr_1.3fr_1.2fr_1.1fr_.8fr_.7fr_.45fr] items-center rounded-lg px-3 py-2.5 text-sm ${
+      className={`grid cursor-pointer grid-cols-[1.5fr_1.3fr_1.2fr_1.1fr_.8fr_.7fr_.45fr] items-center rounded-lg px-3 py-2.5 text-sm ${
         active
           ? "border border-cyan-400 bg-cyan-400/10"
           : "hover:bg-white/5"
       }`}
     >
-      <div className="h-5 w-5 rounded border border-white/15" />
-
       <div className="flex min-w-0 items-center gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-gradient-to-br from-indigo-500/20 to-cyan-500/20">
           {client.image_url ? (
@@ -45,22 +43,32 @@ export function ClientRow({
               className="h-full w-full object-cover"
             />
           ) : (
-            <span className="text-sm font-bold text-cyan-200">{initial}</span>
+            <span className="text-sm font-bold text-cyan-200">
+              {initial}
+            </span>
           )}
         </div>
 
-        <p className="truncate font-medium text-white">{client.name}</p>
+        <p className="truncate font-medium text-white">
+          {client.name}
+        </p>
       </div>
 
       <p className="truncate text-xs text-slate-400">
         {client.email || "E-mail não informado"}
       </p>
 
-      <p className="truncate text-xs text-slate-400">{formattedPhone}</p>
+      <p className="truncate text-xs text-slate-400">
+        {formattedPhone}
+      </p>
 
-      <p className="truncate text-xs text-slate-400">{formattedDocument}</p>
+      <p className="truncate text-xs text-slate-400">
+        {formattedDocument}
+      </p>
 
-      <p className="truncate text-xs text-slate-400">{client.type}</p>
+      <p className="truncate text-xs text-slate-400">
+        {client.type}
+      </p>
 
       <span
         className={`text-xs ${

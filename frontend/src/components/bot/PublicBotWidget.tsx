@@ -56,9 +56,9 @@ function PropertyList({ title, properties }: PropertyListProps) {
               <div className="text-xs text-slate-300">
                 {typeof property.price === "number"
                   ? property.price.toLocaleString("pt-BR", {
-                      style: "currency",
-                      currency: "BRL",
-                    })
+                    style: "currency",
+                    currency: "BRL",
+                  })
                   : property.price}
               </div>
             )}
@@ -83,8 +83,60 @@ export function PublicBotWidget() {
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [currentStep, setCurrentStep] = useState<
+    "ask_document" | "client_phone" | "client_email" | string
+  >("ask_document");
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
+
+  function onlyNumbers(value: string) {
+    return value.replace(/\D/g, "");
+  }
+
+  function maskCpfCnpj(value: string) {
+    const numbers = onlyNumbers(value).slice(0, 14);
+
+    // CPF
+    if (numbers.length <= 11) {
+      return numbers
+        .replace(/^(\d{3})(\d)/, "$1.$2")
+        .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
+        .replace(/\.(\d{3})(\d)/, ".$1-$2");
+    }
+
+    // CNPJ
+    return numbers
+      .replace(/^(\d{2})(\d)/, "$1.$2")
+      .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+      .replace(/\.(\d{3})(\d)/, ".$1/$2")
+      .replace(/(\d{4})(\d)/, "$1-$2");
+  }
+
+  function maskPhone(value: string) {
+    const numbers = onlyNumbers(value).slice(0, 11);
+
+    return numbers
+      .replace(/^(\d{2})(\d)/, "($1) $2")
+      .replace(/(\d{5})(\d)/, "$1-$2");
+  }
+
+  function handleInputChange(
+    e: React.ChangeEvent<HTMLInputElement>
+  ) {
+    const value = e.target.value;
+
+    if (currentStep === "ask_document") {
+      setInput(maskCpfCnpj(value));
+      return;
+    }
+
+    if (currentStep === "client_phone") {
+      setInput(maskPhone(value));
+      return;
+    }
+
+    setInput(value);
+  }
 
   async function handleSend(customMessage?: string) {
     const text = customMessage || input;
@@ -106,6 +158,7 @@ export function PublicBotWidget() {
       const data = await sendBotMessage(text, conversationId);
 
       setConversationId(data.conversation_id);
+      setCurrentStep(data.current_step);
 
       setMessages((prev) => [
         ...prev,
@@ -211,10 +264,9 @@ export function PublicBotWidget() {
                 <div
                   className={`
                     max-w-[85%] whitespace-pre-line rounded-2xl px-4 py-2 text-sm leading-relaxed
-                    ${
-                      item.sender === "bot"
-                        ? "bg-white/10 text-slate-100"
-                        : "ml-auto bg-cyan-400 text-slate-950"
+                    ${item.sender === "bot"
+                      ? "bg-white/10 text-slate-100"
+                      : "ml-auto bg-cyan-400 text-slate-950"
                     }
                   `}
                 >
@@ -271,14 +323,22 @@ export function PublicBotWidget() {
           <div className="flex gap-2 border-t border-white/10 p-3">
             <input
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={handleInputChange}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   handleSend();
                 }
               }}
               disabled={loading}
-              placeholder="Digite sua mensagem..."
+              placeholder={
+                currentStep === "ask_document"
+                  ? "Digite seu CPF ou CNPJ"
+                  : currentStep === "client_phone"
+                    ? "Digite seu telefone"
+                    : currentStep === "client_email"
+                      ? "Digite seu e-mail"
+                      : "Digite sua mensagem..."
+              }
               className="
                 flex-1 rounded-xl
                 border border-white/10
