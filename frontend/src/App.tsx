@@ -1,12 +1,12 @@
-import { BrowserRouter } from "react-router-dom";
+import { HashRouter } from "react-router-dom";
 import { AppRoutes } from "./routes/AppRoutes";
 import { PublicBotWidget } from "./components/bot/PublicBotWidget";
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <AppRoutes />
       <PublicBotWidget />
-    </BrowserRouter>
+    </HashRouter>
   );
 }
