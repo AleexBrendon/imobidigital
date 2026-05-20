@@ -1,7 +1,8 @@
 services:
   app:
     build:
-      context: ./docker/php
+      context: .
+      dockerfile: docker/php/Dockerfile
     container_name: imobidigital_app
     working_dir: /var/www
     volumes:
