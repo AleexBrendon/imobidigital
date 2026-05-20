@@ -15,7 +15,7 @@ WORKDIR /var/www
 COPY backend/ /var/www
 
 # Copia configuração do Nginx
-COPY ../nginx/default.conf /etc/nginx/conf.d/default.conf
+COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
 
 # Expõe a porta HTTP
 EXPOSE 80
