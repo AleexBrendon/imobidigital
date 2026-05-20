@@ -34,10 +34,12 @@ export function EditUserModal({
   const isBlocked = form.status === "Bloqueado";
 
   function handleToggleBlocked() {
-    setForm({
-      ...form,
-      status: isBlocked ? "Online" : "Bloqueado",
-    });
+    if (form) {
+      setForm({
+        ...form,
+        status: isBlocked ? "Online" : "Bloqueado"
+      });
+    }
   }
 
   return (

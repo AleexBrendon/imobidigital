@@ -27,7 +27,7 @@ export function SignatureTimeline({
       </p>
 
       <div className="relative mb-6 flex items-center justify-between">
-        {timeline.steps.map((step, index) => (
+        {timeline.steps.map((step) => (
           <div
             key={step.label}
             className="z-10 text-center"
