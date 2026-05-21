@@ -16,9 +16,20 @@ RUN composer install --no-dev --optimize-autoloader
 RUN rm -f /etc/nginx/sites-enabled/default
 RUN rm -f /etc/nginx/conf.d/default.conf
 
-COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
+RUN composer install --no-dev --optimize-autoloader
 
-RUN chmod -R 775 storage bootstrap/cache
+RUN mkdir -p storage/framework/cache
+RUN mkdir -p storage/framework/sessions
+RUN mkdir -p storage/framework/views
+RUN mkdir -p storage/logs
+
+RUN chmod -R 777 storage
+RUN chmod -R 777 bootstrap/cache
+
+RUN rm -f /etc/nginx/sites-enabled/default
+RUN rm -f /etc/nginx/conf.d/default.conf
+
+COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
