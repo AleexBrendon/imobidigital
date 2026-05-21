@@ -1,24 +1,25 @@
-# Dockerfile na raiz do projeto
 FROM php:8.3-fpm
 
-# Instala extensões e Nginx
 RUN apt-get update && apt-get install -y \
     git unzip curl zip libzip-dev libpng-dev libonig-dev libxml2-dev nginx \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+    libpq-dev \
+    && docker-php-ext-install pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd zip
 
-# Instala Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www
 
-# Copia o backend
 COPY backend/ /var/www
 
-# Copia configuração do Nginx
+RUN composer install --no-dev --optimize-autoloader
+
+RUN rm -f /etc/nginx/sites-enabled/default
+RUN rm -f /etc/nginx/conf.d/default.conf
+
 COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
 
-# Expõe a porta HTTP
+RUN chmod -R 775 storage bootstrap/cache
+
 EXPOSE 80
 
-# Inicializa Nginx e PHP-FPM
-CMD service nginx start && php-fpm
+CMD php-fpm -D && nginx -g "daemon off;"
