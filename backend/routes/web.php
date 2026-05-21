@@ -18,3 +18,12 @@ Route::get('/run-migrate-secret-123', function () {
 
     return '<pre>' . Artisan::output() . '</pre>';
 });
+
+Route::get('/debug-error', function () {
+    return response()->json([
+        'app' => config('app.name'),
+        'env' => app()->environment(),
+        'db' => config('database.default'),
+        'host' => config('database.connections.pgsql.host'),
+    ]);
+});
